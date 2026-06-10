@@ -41,7 +41,9 @@ export default function Home() {
     buildings.find((building) => building.id === selectedBuildingId) ?? buildings[0];
   const selectedFloor =
     floorPlans.find((floor) => floor.id === selectedFloorId) ?? floorPlans[0];
-  const visibleFloors = floorPlans.filter((floor) => floor.buildingId === selectedBuilding.id);
+  const visibleFloors = floorPlans
+    .filter((floor) => floor.buildingId === selectedBuilding.id)
+    .sort((left, right) => right.stackOrder - left.stackOrder);
   const visibleDepartments = departments.filter(
     (department) =>
       department.buildingId === selectedBuilding.id && department.floorId === selectedFloor.id,
@@ -61,14 +63,14 @@ export default function Home() {
               </h1>
               <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-600 lg:text-base">
                 示範由 Department List 揀選部門後，自動跳去對應 building 同 floor，
-                用淡色底圖、清晰 marker 同半透明高亮去模擬商場 directory 體驗。
+                並以 3D building stack 方式將多層樓疊起，望落更似一棟完整建築。
               </p>
             </div>
 
             <div className="grid gap-3 sm:grid-cols-3">
               <StatusCard label="棟數" value={`${buildings.length} Buildings`} />
               <StatusCard label="樓層數" value={`${floorPlans.length} Floors`} />
-              <StatusCard label="互動" value="Auto Jump by List" />
+              <StatusCard label="互動" value="3D Auto Jump View" />
             </div>
           </div>
         </section>
@@ -118,10 +120,13 @@ export default function Home() {
 
           <div className="space-y-5">
             <FloorMap
-              floor={selectedFloor}
+              floors={visibleFloors}
+              activeFloor={selectedFloor}
               departments={visibleDepartments}
               selectedDepartment={selectedDepartment}
+              building={selectedBuilding}
               onSelect={selectDepartment}
+              onSelectFloor={selectFloor}
             />
 
             <div className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-[0_24px_64px_rgba(148,163,184,0.18)]">
@@ -134,8 +139,8 @@ export default function Home() {
 
               <div className="grid gap-3 md:grid-cols-3">
                 <Step text="揀選部門後，自動跳去對應 building。" />
-                <Step text="系統同步切換 floor，顯示淡色底圖。" />
-                <Step text="地圖以高亮框同 marker 顯示精準位置。" />
+                <Step text="系統同步切換 floor，並將目標樓層凸出。" />
+                <Step text="整棟樓以 3D 疊層方式顯示高亮位置。" />
               </div>
             </div>
           </div>
