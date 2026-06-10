@@ -5,10 +5,11 @@ flowchart LR
     B --> C["Building / Floor / Department 資料 JSON"]
     B --> D["導覽控制層"]
     D --> E["Building Tabs"]
-    D --> F["Floor Switcher"]
+    D --> F["3D Floor Stack Controller"]
     B --> G["平面圖渲染層"]
-    G --> H["淡色底圖結構"]
-    G --> I["高亮 Overlay 與 Marker"]
+    G --> H["多層樓板與建築底座"]
+    G --> I["淡色底圖結構"]
+    G --> J["高亮 Overlay 與 Marker"]
 ```
 
 ## 2. 技術描述
@@ -37,6 +38,7 @@ type FloorPlan = {
   buildingId: string;
   label: string;
   title: string;
+  stackOrder: number;
   hallway: Array<{ left: string; top: string; width: string; height: string }>;
   blocks: Array<{ left: string; top: string; width: string; height: string }>;
 };
@@ -74,6 +76,7 @@ erDiagram
         string buildingId
         string label
         string title
+        number stackOrder
     }
     DEPARTMENT_AREA {
         string id
@@ -95,9 +98,9 @@ erDiagram
 |------|------|
 | `src/pages/Home.tsx` | 組合整個多棟多層導覽頁面 |
 | `src/components/BuildingTabs.tsx` | 顯示 building 切換 tab |
-| `src/components/FloorSwitcher.tsx` | 顯示當前 building 所有樓層 |
+| `src/components/FloorSwitcher.tsx` | 顯示當前 building 所有樓層並配合疊層導覽 |
 | `src/components/DepartmentList.tsx` | 顯示搜尋及部門列表 |
-| `src/components/FloorMap.tsx` | 顯示淡色平面圖及高亮 overlay |
+| `src/components/FloorMap.tsx` | 顯示 3D building stack、淡色平面圖及高亮 overlay |
 | `src/components/DepartmentDetails.tsx` | 顯示目前選取部門資訊 |
 | `src/data/directory.ts` | 儲存 building、floor、department mock data |
 | `src/store/useDirectoryStore.ts` | 管理搜尋、building、floor 與選取狀態 |
@@ -105,5 +108,5 @@ erDiagram
 ## 6. 實作重點
 - 使用 building、floor、department 三層資料模型驅動導覽流程。
 - 當用戶於清單揀選部門時，store 會同步更新 selectedDepartment、selectedBuilding 同 selectedFloor，做到自動跳位。
-- 平面圖底色改為淡色商場 directory 風格，未選中部門不以深色填滿，只保留淡輪廓與高亮 overlay。
+- 平面圖底色改為淡色 directory 風格，並以多層樓板堆疊出建築體積感，被選樓層向前凸出。
 - Prototype 階段先以靜態資料同單頁應用完成示意，之後可逐層接駁真實底圖影像或 SVG。

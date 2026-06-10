@@ -35,7 +35,9 @@ export const useDirectoryStore = create<DirectoryStore>((set) => ({
     });
   },
   selectBuilding: (buildingId) => {
-    const buildingFloors = floorPlans.filter((floor) => floor.buildingId === buildingId);
+    const buildingFloors = floorPlans
+      .filter((floor) => floor.buildingId === buildingId)
+      .sort((left, right) => right.stackOrder - left.stackOrder);
     const nextFloor = buildingFloors[0];
     const matchingDepartment = departments.find(
       (department) =>

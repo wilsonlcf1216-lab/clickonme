@@ -17,6 +17,7 @@ export type FloorPlan = {
   buildingId: string;
   label: string;
   title: string;
+  stackOrder: number;
   hallway: MapRect[];
   blocks: MapRect[];
 };
@@ -51,10 +52,62 @@ export const buildings: Building[] = [
 
 export const floorPlans: FloorPlan[] = [
   {
+    id: "a-6f",
+    buildingId: "tower-a",
+    label: "6/F",
+    title: "Tower A - Level 6",
+    stackOrder: 6,
+    hallway: [
+      { left: "0%", top: "47%", width: "100%", height: "9%" },
+      { left: "43%", top: "0%", width: "9%", height: "100%" },
+    ],
+    blocks: [
+      { left: "7%", top: "10%", width: "24%", height: "18%" },
+      { left: "58%", top: "10%", width: "26%", height: "18%" },
+      { left: "10%", top: "69%", width: "22%", height: "13%" },
+      { left: "59%", top: "68%", width: "24%", height: "14%" },
+    ],
+  },
+  {
+    id: "a-5f",
+    buildingId: "tower-a",
+    label: "5/F",
+    title: "Tower A - Level 5",
+    stackOrder: 5,
+    hallway: [
+      { left: "0%", top: "46%", width: "100%", height: "10%" },
+      { left: "40%", top: "0%", width: "11%", height: "100%" },
+    ],
+    blocks: [
+      { left: "7%", top: "9%", width: "25%", height: "18%" },
+      { left: "57%", top: "10%", width: "27%", height: "19%" },
+      { left: "9%", top: "66%", width: "24%", height: "15%" },
+      { left: "58%", top: "67%", width: "25%", height: "14%" },
+    ],
+  },
+  {
+    id: "a-4f",
+    buildingId: "tower-a",
+    label: "4/F",
+    title: "Tower A - Level 4",
+    stackOrder: 4,
+    hallway: [
+      { left: "0%", top: "45%", width: "100%", height: "11%" },
+      { left: "39%", top: "0%", width: "11%", height: "100%" },
+    ],
+    blocks: [
+      { left: "8%", top: "10%", width: "24%", height: "17%" },
+      { left: "57%", top: "11%", width: "27%", height: "18%" },
+      { left: "12%", top: "66%", width: "20%", height: "15%" },
+      { left: "58%", top: "66%", width: "24%", height: "15%" },
+    ],
+  },
+  {
     id: "a-2f",
     buildingId: "tower-a",
     label: "2/F",
     title: "Tower A - Level 2",
+    stackOrder: 2,
     hallway: [
       { left: "0%", top: "46%", width: "100%", height: "10%" },
       { left: "41%", top: "0%", width: "10%", height: "100%" },
@@ -71,6 +124,7 @@ export const floorPlans: FloorPlan[] = [
     buildingId: "tower-a",
     label: "3/F",
     title: "Tower A - Level 3",
+    stackOrder: 3,
     hallway: [
       { left: "0%", top: "45%", width: "100%", height: "12%" },
       { left: "35%", top: "0%", width: "12%", height: "100%" },
@@ -83,10 +137,79 @@ export const floorPlans: FloorPlan[] = [
     ],
   },
   {
+    id: "a-1f",
+    buildingId: "tower-a",
+    label: "1/F",
+    title: "Tower A - Level 1",
+    stackOrder: 1,
+    hallway: [
+      { left: "0%", top: "47%", width: "100%", height: "10%" },
+      { left: "43%", top: "0%", width: "8%", height: "100%" },
+    ],
+    blocks: [
+      { left: "7%", top: "11%", width: "24%", height: "17%" },
+      { left: "60%", top: "10%", width: "24%", height: "17%" },
+      { left: "8%", top: "67%", width: "23%", height: "15%" },
+      { left: "58%", top: "66%", width: "25%", height: "16%" },
+    ],
+  },
+  {
+    id: "b-5f",
+    buildingId: "tower-b",
+    label: "5/F",
+    title: "Tower B - Level 5",
+    stackOrder: 5,
+    hallway: [
+      { left: "0%", top: "46%", width: "100%", height: "10%" },
+      { left: "47%", top: "0%", width: "9%", height: "100%" },
+    ],
+    blocks: [
+      { left: "8%", top: "10%", width: "24%", height: "18%" },
+      { left: "61%", top: "8%", width: "23%", height: "20%" },
+      { left: "10%", top: "66%", width: "22%", height: "14%" },
+      { left: "60%", top: "66%", width: "24%", height: "15%" },
+    ],
+  },
+  {
+    id: "b-4f",
+    buildingId: "tower-b",
+    label: "4/F",
+    title: "Tower B - Level 4",
+    stackOrder: 4,
+    hallway: [
+      { left: "0%", top: "46%", width: "100%", height: "10%" },
+      { left: "48%", top: "0%", width: "8%", height: "100%" },
+    ],
+    blocks: [
+      { left: "7%", top: "10%", width: "25%", height: "18%" },
+      { left: "62%", top: "10%", width: "23%", height: "19%" },
+      { left: "11%", top: "66%", width: "21%", height: "14%" },
+      { left: "61%", top: "65%", width: "23%", height: "15%" },
+    ],
+  },
+  {
+    id: "b-3f",
+    buildingId: "tower-b",
+    label: "3/F",
+    title: "Tower B - Level 3",
+    stackOrder: 3,
+    hallway: [
+      { left: "0%", top: "45%", width: "100%", height: "11%" },
+      { left: "47%", top: "0%", width: "10%", height: "100%" },
+    ],
+    blocks: [
+      { left: "7%", top: "8%", width: "24%", height: "19%" },
+      { left: "62%", top: "8%", width: "23%", height: "20%" },
+      { left: "9%", top: "63%", width: "23%", height: "18%" },
+      { left: "60%", top: "65%", width: "24%", height: "16%" },
+    ],
+  },
+  {
     id: "b-gf",
     buildingId: "tower-b",
     label: "G/F",
     title: "Tower B - Ground Floor",
+    stackOrder: 0,
     hallway: [
       { left: "0%", top: "46%", width: "100%", height: "11%" },
       { left: "48%", top: "4%", width: "8%", height: "90%" },
@@ -103,6 +226,7 @@ export const floorPlans: FloorPlan[] = [
     buildingId: "tower-b",
     label: "1/F",
     title: "Tower B - Level 1",
+    stackOrder: 1,
     hallway: [
       { left: "0%", top: "45%", width: "100%", height: "12%" },
       { left: "46%", top: "0%", width: "10%", height: "100%" },
@@ -114,9 +238,38 @@ export const floorPlans: FloorPlan[] = [
       { left: "60%", top: "64%", width: "25%", height: "18%" },
     ],
   },
+  {
+    id: "b-2f",
+    buildingId: "tower-b",
+    label: "2/F",
+    title: "Tower B - Level 2",
+    stackOrder: 2,
+    hallway: [
+      { left: "0%", top: "45%", width: "100%", height: "11%" },
+      { left: "46%", top: "0%", width: "10%", height: "100%" },
+    ],
+    blocks: [
+      { left: "8%", top: "9%", width: "25%", height: "18%" },
+      { left: "60%", top: "9%", width: "24%", height: "18%" },
+      { left: "9%", top: "64%", width: "24%", height: "17%" },
+      { left: "60%", top: "64%", width: "24%", height: "17%" },
+    ],
+  },
 ];
 
 export const departments: Department[] = [
+  {
+    id: "dept-4501",
+    code: "45.01",
+    name: "Advanced Tissue Archive",
+    shortName: "Tissue Archive",
+    buildingId: "tower-a",
+    floorId: "a-5f",
+    color: "#9f8bff",
+    glowColor: "rgba(159, 139, 255, 0.18)",
+    description: "位於 Tower A 5/F，展示高層樓板一樣可被定位。",
+    bounds: { left: "57%", top: "10%", width: "27%", height: "19%" },
+  },
   {
     id: "dept-2703",
     code: "27.03",
@@ -154,6 +307,18 @@ export const departments: Department[] = [
     bounds: { left: "54%", top: "16%", width: "30%", height: "56%" },
   },
   {
+    id: "dept-3308",
+    code: "33.08",
+    name: "Cell Imaging Coordination Hub",
+    shortName: "Imaging Hub",
+    buildingId: "tower-a",
+    floorId: "a-4f",
+    color: "#47b8ff",
+    glowColor: "rgba(71, 184, 255, 0.18)",
+    description: "位於 Tower A 4/F，示範同一棟多層樓疊起效果。",
+    bounds: { left: "58%", top: "11%", width: "26%", height: "18%" },
+  },
+  {
     id: "dept-1205",
     code: "12.05",
     name: "Genomics Lab Support",
@@ -166,6 +331,18 @@ export const departments: Department[] = [
     bounds: { left: "57%", top: "10%", width: "27%", height: "18%" },
   },
   {
+    id: "dept-6150",
+    code: "61.50",
+    name: "Public Education Suite",
+    shortName: "Education Suite",
+    buildingId: "tower-b",
+    floorId: "b-5f",
+    color: "#7dcb7a",
+    glowColor: "rgba(125, 203, 122, 0.18)",
+    description: "位於 Tower B 5/F，用作高層示範樓層。",
+    bounds: { left: "61%", top: "8%", width: "23%", height: "20%" },
+  },
+  {
     id: "dept-g012",
     code: "G0.12",
     name: "Reception & Visitor Center",
@@ -176,6 +353,18 @@ export const departments: Department[] = [
     glowColor: "rgba(255, 182, 77, 0.22)",
     description: "位於 Tower B G/F 入口附近，適合作為訪客導覽目標。",
     bounds: { left: "63%", top: "9%", width: "21%", height: "19%" },
+  },
+  {
+    id: "dept-2058",
+    code: "20.58",
+    name: "Pharmacy Support Cluster",
+    shortName: "Pharmacy Support",
+    buildingId: "tower-b",
+    floorId: "b-2f",
+    color: "#ff8f6b",
+    glowColor: "rgba(255, 143, 107, 0.18)",
+    description: "位於 Tower B 2/F，方便測試中段樓層定位。",
+    bounds: { left: "60%", top: "64%", width: "24%", height: "17%" },
   },
   {
     id: "dept-1052",
