@@ -1,12 +1,23 @@
-import { ChevronRight, PanelLeftClose } from "lucide-react";
+import { ChevronRight, Compass, MapPinned, PanelLeftClose } from "lucide-react";
+import BuildingTabs from "@/components/BuildingTabs";
 import DepartmentDetails from "@/components/DepartmentDetails";
 import DepartmentList from "@/components/DepartmentList";
+import FloorSwitcher from "@/components/FloorSwitcher";
 import FloorMap from "@/components/FloorMap";
-import { departments } from "@/data/departments";
-import { useDepartmentStore } from "@/store/useDepartmentStore";
+import { buildings, departments, floorPlans } from "@/data/directory";
+import { useDirectoryStore } from "@/store/useDirectoryStore";
 
 export default function Home() {
-  const { query, selectedId, setQuery, setSelectedId } = useDepartmentStore();
+  const {
+    query,
+    selectedDepartmentId,
+    selectedBuildingId,
+    selectedFloorId,
+    setQuery,
+    selectBuilding,
+    selectDepartment,
+    selectFloor,
+  } = useDirectoryStore();
 
   const filteredDepartments = departments.filter((department) => {
     const keyword = query.trim().toLowerCase();
@@ -18,71 +29,129 @@ export default function Home() {
     return (
       department.code.toLowerCase().includes(keyword) ||
       department.name.toLowerCase().includes(keyword) ||
-      department.shortName.toLowerCase().includes(keyword)
+      department.shortName.toLowerCase().includes(keyword) ||
+      department.buildingId.toLowerCase().includes(keyword) ||
+      department.floorId.toLowerCase().includes(keyword)
     );
   });
 
   const selectedDepartment =
-    departments.find((department) => department.id === selectedId) ?? departments[0];
+    departments.find((department) => department.id === selectedDepartmentId) ?? departments[0];
+  const selectedBuilding =
+    buildings.find((building) => building.id === selectedBuildingId) ?? buildings[0];
+  const selectedFloor =
+    floorPlans.find((floor) => floor.id === selectedFloorId) ?? floorPlans[0];
+  const visibleFloors = floorPlans.filter((floor) => floor.buildingId === selectedBuilding.id);
+  const visibleDepartments = departments.filter(
+    (department) =>
+      department.buildingId === selectedBuilding.id && department.floorId === selectedFloor.id,
+  );
 
   return (
-    <main className="min-h-screen px-4 py-5 text-white md:px-6 lg:px-8">
+    <main className="min-h-screen px-4 py-5 text-slate-900 md:px-6 lg:px-8">
       <div className="mx-auto max-w-[1600px]">
-        <section className="mb-5 rounded-[32px] border border-white/10 bg-slate-950/65 px-6 py-5 shadow-[0_24px_80px_rgba(15,23,42,0.45)] backdrop-blur">
+        <section className="mb-5 rounded-[32px] border border-white/70 bg-white/80 px-6 py-5 shadow-[0_24px_64px_rgba(148,163,184,0.18)] backdrop-blur">
           <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
             <div className="max-w-3xl">
-              <p className="text-xs uppercase tracking-[0.36em] text-cyan-200/75">
-                Department Highlight System
+              <p className="text-xs uppercase tracking-[0.36em] text-sky-500/80">
+                Mall Directory Style Prototype
               </p>
-              <h1 className="mt-3 text-4xl font-semibold leading-tight text-white lg:text-5xl">
-                部門定位 prototype 畫面示意圖
+              <h1 className="mt-3 text-4xl font-semibold leading-tight text-slate-900 lg:text-5xl">
+                多棟多層商場路線圖風格定位系統
               </h1>
-              <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-300 lg:text-base">
-                示範由 Department List 揀選部門，喺平面圖上即時顯示半透明有色框，
-                用作接待處、部門查詢屏幕或者內部樓層定位系統。
+              <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-600 lg:text-base">
+                示範由 Department List 揀選部門後，自動跳去對應 building 同 floor，
+                用淡色底圖、清晰 marker 同半透明高亮去模擬商場 directory 體驗。
               </p>
             </div>
 
             <div className="grid gap-3 sm:grid-cols-3">
-              <StatusCard label="樓層" value="3/F Layout" />
-              <StatusCard label="部門數" value={`${departments.length} Areas`} />
-              <StatusCard label="互動" value="Click to Highlight" />
+              <StatusCard label="棟數" value={`${buildings.length} Buildings`} />
+              <StatusCard label="樓層數" value={`${floorPlans.length} Floors`} />
+              <StatusCard label="互動" value="Auto Jump by List" />
             </div>
           </div>
         </section>
 
-        <section className="grid gap-5 xl:grid-cols-[340px_minmax(0,1fr)_320px]">
+        <section className="mb-5 grid gap-4 xl:grid-cols-[minmax(0,1fr)_280px]">
+          <div className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-[0_24px_64px_rgba(148,163,184,0.18)]">
+            <div className="mb-4 flex items-center gap-3">
+              <div className="rounded-2xl bg-sky-50 p-3 text-sky-600">
+                <Compass className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="text-xs uppercase tracking-[0.28em] text-slate-400">Building Navigator</p>
+                <h2 className="text-xl font-semibold text-slate-900">棟別切換</h2>
+              </div>
+            </div>
+            <BuildingTabs
+              buildings={buildings}
+              selectedBuildingId={selectedBuilding.id}
+              onSelect={selectBuilding}
+            />
+          </div>
+
+          <div className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-[0_24px_64px_rgba(148,163,184,0.18)]">
+            <div className="mb-4 flex items-center gap-3">
+              <div className="rounded-2xl bg-emerald-50 p-3 text-emerald-600">
+                <MapPinned className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="text-xs uppercase tracking-[0.28em] text-slate-400">Current Target</p>
+                <h2 className="text-xl font-semibold text-slate-900">{selectedBuilding.shortName}</h2>
+              </div>
+            </div>
+            <p className="text-sm leading-7 text-slate-600">{selectedBuilding.description}</p>
+          </div>
+        </section>
+
+        <section className="grid gap-5 xl:grid-cols-[340px_minmax(0,1fr)_300px]">
           <DepartmentList
             departments={filteredDepartments}
+            buildings={buildings}
+            floors={floorPlans}
             query={query}
-            selectedId={selectedDepartment.id}
+            selectedDepartmentId={selectedDepartment.id}
             onQueryChange={setQuery}
-            onSelect={setSelectedId}
-          />
-
-          <FloorMap
-            departments={departments}
-            selectedDepartment={selectedDepartment}
-            onSelect={setSelectedId}
+            onSelect={selectDepartment}
           />
 
           <div className="space-y-5">
-            <DepartmentDetails department={selectedDepartment} />
+            <FloorMap
+              floor={selectedFloor}
+              departments={visibleDepartments}
+              selectedDepartment={selectedDepartment}
+              onSelect={selectDepartment}
+            />
 
-            <div className="rounded-[28px] border border-white/10 bg-slate-950/70 p-5 shadow-[0_20px_80px_rgba(15,23,42,0.45)] backdrop-blur">
+            <div className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-[0_24px_64px_rgba(148,163,184,0.18)]">
               <div className="mb-4 flex items-center justify-between">
-                <p className="text-xs uppercase tracking-[0.3em] text-cyan-200/70">
+                <p className="text-xs uppercase tracking-[0.3em] text-sky-500/80">
                   Flow Preview
                 </p>
-                <PanelLeftClose className="h-4 w-4 text-cyan-100" />
+                <PanelLeftClose className="h-4 w-4 text-slate-500" />
               </div>
 
-              <div className="space-y-3 text-sm text-slate-300">
-                <Step text="用戶由清單揀選部門名稱或輸入搜尋字。" />
-                <Step text="系統比對部門顏色、名稱及平面圖座標。" />
-                <Step text="右側平面圖顯示半透明高亮框及當前資訊。" />
+              <div className="grid gap-3 md:grid-cols-3">
+                <Step text="揀選部門後，自動跳去對應 building。" />
+                <Step text="系統同步切換 floor，顯示淡色底圖。" />
+                <Step text="地圖以高亮框同 marker 顯示精準位置。" />
               </div>
             </div>
+          </div>
+
+          <div className="space-y-5">
+            <FloorSwitcher
+              floors={visibleFloors}
+              selectedFloorId={selectedFloor.id}
+              onSelect={selectFloor}
+            />
+
+            <DepartmentDetails
+              department={selectedDepartment}
+              building={selectedBuilding}
+              floor={selectedFloor}
+            />
           </div>
         </section>
       </div>
@@ -97,20 +166,20 @@ type StatusCardProps = {
 
 function StatusCard({ label, value }: StatusCardProps) {
   return (
-    <div className="rounded-[24px] border border-white/10 bg-white/[0.04] px-4 py-4">
+    <div className="rounded-[24px] border border-slate-200 bg-slate-50 px-4 py-4">
       <p className="text-xs uppercase tracking-[0.24em] text-slate-400">{label}</p>
-      <p className="mt-2 text-lg font-semibold text-white">{value}</p>
+      <p className="mt-2 text-lg font-semibold text-slate-900">{value}</p>
     </div>
   );
 }
 
 function Step({ text }: { text: string }) {
   return (
-    <div className="flex items-start gap-3 rounded-2xl border border-white/10 bg-white/[0.04] p-4">
-      <div className="mt-0.5 rounded-full border border-cyan-300/20 bg-cyan-300/10 p-1 text-cyan-100">
+    <div className="flex items-start gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+      <div className="mt-0.5 rounded-full border border-sky-200 bg-sky-50 p-1 text-sky-600">
         <ChevronRight className="h-4 w-4" />
       </div>
-      <p className="leading-7">{text}</p>
+      <p className="leading-7 text-slate-600">{text}</p>
     </div>
   );
 }
