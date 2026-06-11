@@ -32,8 +32,11 @@ export default function Home() {
 
   const selectedDepartment =
     departments.find((department) => department.id === selectedDepartmentId) ?? departments[0];
+  const activeFloorId = selectedDepartment.floorId || selectedFloorId;
   const selectedFloor =
-    floorPlans.find((floor) => floor.id === selectedFloorId) ?? floorPlans[0];
+    floorPlans.find((floor) => floor.id === activeFloorId) ??
+    floorPlans.find((floor) => floor.id === selectedFloorId) ??
+    floorPlans[0];
 
   return (
     <main className="min-h-screen px-4 py-4 text-slate-900 md:px-6">
