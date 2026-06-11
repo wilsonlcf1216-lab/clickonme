@@ -1,383 +1,300 @@
-export type MapRect = {
-  left: string;
-  top: string;
-  width: string;
-  height: string;
+export type MapPoint = {
+  x: string;
+  y: string;
 };
 
-export type Building = {
+export type LiftGroup = {
   id: string;
-  name: string;
-  shortName: string;
-  description: string;
+  code: string;
+  color: string;
+  floorId: string;
+  position: MapPoint;
+  batch: "upper" | "lower" | "special";
 };
 
 export type FloorPlan = {
   id: string;
-  buildingId: string;
   label: string;
-  title: string;
-  stackOrder: number;
-  hallway: MapRect[];
-  blocks: MapRect[];
+  level: number;
+  imagePath: string;
+  entrance: MapPoint;
+  lifts: LiftGroup[];
 };
 
 export type Department = {
   id: string;
   code: string;
   name: string;
-  shortName: string;
-  buildingId: string;
   floorId: string;
   color: string;
-  glowColor: string;
-  description: string;
-  bounds: MapRect;
+  target: MapPoint;
+  preferredLiftIds: string[];
+  routeFromEntrance: MapPoint[];
+  routeFromLift: MapPoint[];
 };
 
-export const buildings: Building[] = [
-  {
-    id: "tower-a",
-    name: "Research Tower A",
-    shortName: "Tower A",
-    description: "主診斷及實驗空間集中區，偏向西翼布局。",
-  },
-  {
-    id: "tower-b",
-    name: "Clinical Tower B",
-    shortName: "Tower B",
-    description: "臨床研究及支援空間集中區，偏向東翼布局。",
-  },
+export type RouteMode = "entrance" | "lift";
+
+const fallbackEntrance: MapPoint = { x: "50%", y: "50%" };
+
+const floorCatalog: Array<Pick<FloorPlan, "id" | "label" | "imagePath">> = [
+  { id: "b02", label: "B02", imagePath: "floorplates/b02.png" },
+  { id: "b01", label: "B01", imagePath: "floorplates/b01.png" },
+  { id: "gf", label: "G/F", imagePath: "floorplates/gf.png" },
+  { id: "1f", label: "1/F", imagePath: "floorplates/1f.png" },
+  { id: "2f", label: "2/F", imagePath: "floorplates/2f.png" },
+  { id: "3f", label: "3/F", imagePath: "floorplates/3f.png" },
+  { id: "4f", label: "4/F", imagePath: "floorplates/4f.png" },
+  { id: "5f", label: "5/F", imagePath: "floorplates/5f.png" },
+  { id: "6f", label: "6/F", imagePath: "floorplates/6f.png" },
+  { id: "7f", label: "7/F", imagePath: "floorplates/7f.png" },
+  { id: "8f", label: "8/F", imagePath: "floorplates/8f.png" },
+  { id: "9f", label: "9/F", imagePath: "floorplates/9f.png" },
+  { id: "10f", label: "10/F", imagePath: "floorplates/10f.png" },
+  { id: "11f", label: "11/F", imagePath: "floorplates/11f.png" },
+  { id: "12f", label: "12/F", imagePath: "floorplates/12f.png" },
+  { id: "13f", label: "13/F", imagePath: "floorplates/13f.png" },
+  { id: "14f", label: "14/F", imagePath: "floorplates/14f.png" },
+  { id: "15f", label: "15/F", imagePath: "floorplates/15f.png" },
+  { id: "16f", label: "16/F", imagePath: "floorplates/16f.png" },
+  { id: "17f", label: "17/F", imagePath: "floorplates/17f.png" },
+  { id: "18f", label: "18/F", imagePath: "floorplates/18f.png" },
+  { id: "19f", label: "19/F", imagePath: "floorplates/19f.png" },
 ];
 
-export const floorPlans: FloorPlan[] = [
-  {
-    id: "a-6f",
-    buildingId: "tower-a",
-    label: "6/F",
-    title: "Tower A - Level 6",
-    stackOrder: 6,
-    hallway: [
-      { left: "0%", top: "47%", width: "100%", height: "9%" },
-      { left: "43%", top: "0%", width: "9%", height: "100%" },
-    ],
-    blocks: [
-      { left: "7%", top: "10%", width: "24%", height: "18%" },
-      { left: "58%", top: "10%", width: "26%", height: "18%" },
-      { left: "10%", top: "69%", width: "22%", height: "13%" },
-      { left: "59%", top: "68%", width: "24%", height: "14%" },
-    ],
-  },
-  {
-    id: "a-5f",
-    buildingId: "tower-a",
-    label: "5/F",
-    title: "Tower A - Level 5",
-    stackOrder: 5,
-    hallway: [
-      { left: "0%", top: "46%", width: "100%", height: "10%" },
-      { left: "40%", top: "0%", width: "11%", height: "100%" },
-    ],
-    blocks: [
-      { left: "7%", top: "9%", width: "25%", height: "18%" },
-      { left: "57%", top: "10%", width: "27%", height: "19%" },
-      { left: "9%", top: "66%", width: "24%", height: "15%" },
-      { left: "58%", top: "67%", width: "25%", height: "14%" },
-    ],
-  },
-  {
-    id: "a-4f",
-    buildingId: "tower-a",
-    label: "4/F",
-    title: "Tower A - Level 4",
-    stackOrder: 4,
-    hallway: [
-      { left: "0%", top: "45%", width: "100%", height: "11%" },
-      { left: "39%", top: "0%", width: "11%", height: "100%" },
-    ],
-    blocks: [
-      { left: "8%", top: "10%", width: "24%", height: "17%" },
-      { left: "57%", top: "11%", width: "27%", height: "18%" },
-      { left: "12%", top: "66%", width: "20%", height: "15%" },
-      { left: "58%", top: "66%", width: "24%", height: "15%" },
-    ],
-  },
-  {
-    id: "a-2f",
-    buildingId: "tower-a",
-    label: "2/F",
-    title: "Tower A - Level 2",
-    stackOrder: 2,
-    hallway: [
-      { left: "0%", top: "46%", width: "100%", height: "10%" },
-      { left: "41%", top: "0%", width: "10%", height: "100%" },
-    ],
-    blocks: [
-      { left: "5%", top: "8%", width: "28%", height: "20%" },
-      { left: "57%", top: "9%", width: "28%", height: "20%" },
-      { left: "10%", top: "66%", width: "22%", height: "17%" },
-      { left: "57%", top: "68%", width: "29%", height: "16%" },
-    ],
-  },
-  {
-    id: "a-3f",
-    buildingId: "tower-a",
-    label: "3/F",
-    title: "Tower A - Level 3",
-    stackOrder: 3,
-    hallway: [
-      { left: "0%", top: "45%", width: "100%", height: "12%" },
-      { left: "35%", top: "0%", width: "12%", height: "100%" },
-    ],
-    blocks: [
-      { left: "8%", top: "8%", width: "24%", height: "18%" },
-      { left: "10%", top: "30%", width: "26%", height: "46%" },
-      { left: "54%", top: "14%", width: "30%", height: "58%" },
-      { left: "58%", top: "76%", width: "24%", height: "11%" },
-    ],
-  },
-  {
-    id: "a-1f",
-    buildingId: "tower-a",
-    label: "1/F",
-    title: "Tower A - Level 1",
-    stackOrder: 1,
-    hallway: [
-      { left: "0%", top: "47%", width: "100%", height: "10%" },
-      { left: "43%", top: "0%", width: "8%", height: "100%" },
-    ],
-    blocks: [
-      { left: "7%", top: "11%", width: "24%", height: "17%" },
-      { left: "60%", top: "10%", width: "24%", height: "17%" },
-      { left: "8%", top: "67%", width: "23%", height: "15%" },
-      { left: "58%", top: "66%", width: "25%", height: "16%" },
-    ],
-  },
-  {
-    id: "b-5f",
-    buildingId: "tower-b",
-    label: "5/F",
-    title: "Tower B - Level 5",
-    stackOrder: 5,
-    hallway: [
-      { left: "0%", top: "46%", width: "100%", height: "10%" },
-      { left: "47%", top: "0%", width: "9%", height: "100%" },
-    ],
-    blocks: [
-      { left: "8%", top: "10%", width: "24%", height: "18%" },
-      { left: "61%", top: "8%", width: "23%", height: "20%" },
-      { left: "10%", top: "66%", width: "22%", height: "14%" },
-      { left: "60%", top: "66%", width: "24%", height: "15%" },
-    ],
-  },
-  {
-    id: "b-4f",
-    buildingId: "tower-b",
-    label: "4/F",
-    title: "Tower B - Level 4",
-    stackOrder: 4,
-    hallway: [
-      { left: "0%", top: "46%", width: "100%", height: "10%" },
-      { left: "48%", top: "0%", width: "8%", height: "100%" },
-    ],
-    blocks: [
-      { left: "7%", top: "10%", width: "25%", height: "18%" },
-      { left: "62%", top: "10%", width: "23%", height: "19%" },
-      { left: "11%", top: "66%", width: "21%", height: "14%" },
-      { left: "61%", top: "65%", width: "23%", height: "15%" },
-    ],
-  },
-  {
-    id: "b-3f",
-    buildingId: "tower-b",
-    label: "3/F",
-    title: "Tower B - Level 3",
-    stackOrder: 3,
-    hallway: [
-      { left: "0%", top: "45%", width: "100%", height: "11%" },
-      { left: "47%", top: "0%", width: "10%", height: "100%" },
-    ],
-    blocks: [
-      { left: "7%", top: "8%", width: "24%", height: "19%" },
-      { left: "62%", top: "8%", width: "23%", height: "20%" },
-      { left: "9%", top: "63%", width: "23%", height: "18%" },
-      { left: "60%", top: "65%", width: "24%", height: "16%" },
-    ],
-  },
-  {
-    id: "b-gf",
-    buildingId: "tower-b",
-    label: "G/F",
-    title: "Tower B - Ground Floor",
-    stackOrder: 0,
-    hallway: [
-      { left: "0%", top: "46%", width: "100%", height: "11%" },
-      { left: "48%", top: "4%", width: "8%", height: "90%" },
-    ],
-    blocks: [
-      { left: "8%", top: "10%", width: "27%", height: "18%" },
-      { left: "63%", top: "8%", width: "22%", height: "22%" },
-      { left: "12%", top: "67%", width: "22%", height: "15%" },
-      { left: "60%", top: "65%", width: "26%", height: "18%" },
-    ],
-  },
-  {
-    id: "b-1f",
-    buildingId: "tower-b",
-    label: "1/F",
-    title: "Tower B - Level 1",
-    stackOrder: 1,
-    hallway: [
-      { left: "0%", top: "45%", width: "100%", height: "12%" },
-      { left: "46%", top: "0%", width: "10%", height: "100%" },
-    ],
-    blocks: [
-      { left: "7%", top: "9%", width: "25%", height: "18%" },
-      { left: "61%", top: "8%", width: "24%", height: "20%" },
-      { left: "8%", top: "63%", width: "25%", height: "19%" },
-      { left: "60%", top: "64%", width: "25%", height: "18%" },
-    ],
-  },
-  {
-    id: "b-2f",
-    buildingId: "tower-b",
-    label: "2/F",
-    title: "Tower B - Level 2",
-    stackOrder: 2,
-    hallway: [
-      { left: "0%", top: "45%", width: "100%", height: "11%" },
-      { left: "46%", top: "0%", width: "10%", height: "100%" },
-    ],
-    blocks: [
-      { left: "8%", top: "9%", width: "25%", height: "18%" },
-      { left: "60%", top: "9%", width: "24%", height: "18%" },
-      { left: "9%", top: "64%", width: "24%", height: "17%" },
-      { left: "60%", top: "64%", width: "24%", height: "17%" },
-    ],
-  },
-];
+const floorEntrances: Record<string, MapPoint> = {
+  gf: { x: "86%", y: "55%" },
+  "1f": { x: "86%", y: "50%" },
+  "2f": { x: "83%", y: "56%" },
+};
+
+const floorLifts: Record<string, LiftGroup[]> = {
+  gf: [
+    { id: "sn-core-gf", code: "SN", color: "#0ea5e9", floorId: "gf", position: { x: "52.3%", y: "28.6%" }, batch: "upper" },
+    { id: "h-core-gf", code: "H", color: "#facc15", floorId: "gf", position: { x: "51.6%", y: "37.9%" }, batch: "upper" },
+    { id: "s-core-gf", code: "S", color: "#fde047", floorId: "gf", position: { x: "51.1%", y: "46.7%" }, batch: "upper" },
+    { id: "l-core-gf", code: "L", color: "#eab308", floorId: "gf", position: { x: "51.3%", y: "55.5%" }, batch: "upper" },
+    { id: "a5-gf", code: "A5", color: "#f97316", floorId: "gf", position: { x: "13.3%", y: "31.1%" }, batch: "special" },
+    { id: "ht-core-gf", code: "HT", color: "#ef4444", floorId: "gf", position: { x: "52.2%", y: "58.2%" }, batch: "lower" },
+    { id: "sw-core-gf", code: "SW", color: "#06b6d4", floorId: "gf", position: { x: "47.0%", y: "67.3%" }, batch: "lower" },
+    { id: "se-core-gf", code: "SE", color: "#06b6d4", floorId: "gf", position: { x: "59.8%", y: "67.3%" }, batch: "lower" },
+  ],
+  "1f": [
+    { id: "sn-core-1f", code: "SN", color: "#0ea5e9", floorId: "1f", position: { x: "53.1%", y: "29.8%" }, batch: "upper" },
+    { id: "h-core-1f", code: "H", color: "#94a3b8", floorId: "1f", position: { x: "52.3%", y: "38.8%" }, batch: "upper" },
+    { id: "s-core-1f", code: "S", color: "#94a3b8", floorId: "1f", position: { x: "51.6%", y: "47.0%" }, batch: "upper" },
+    { id: "l-core-1f", code: "L", color: "#eab308", floorId: "1f", position: { x: "52.4%", y: "55.3%" }, batch: "upper" },
+    { id: "a5-1f", code: "A5", color: "#f97316", floorId: "1f", position: { x: "13.1%", y: "29.6%" }, batch: "special" },
+    { id: "ht-core-1f", code: "HT", color: "#ef4444", floorId: "1f", position: { x: "52.0%", y: "58.5%" }, batch: "lower" },
+    { id: "sw-core-1f", code: "SW", color: "#06b6d4", floorId: "1f", position: { x: "47.3%", y: "66.8%" }, batch: "lower" },
+    { id: "se-core-1f", code: "SE", color: "#06b6d4", floorId: "1f", position: { x: "59.3%", y: "66.8%" }, batch: "lower" },
+  ],
+  "2f": [
+    { id: "sn-core-2f", code: "SN", color: "#0ea5e9", floorId: "2f", position: { x: "53.0%", y: "29.4%" }, batch: "upper" },
+    { id: "h-core-2f", code: "H", color: "#94a3b8", floorId: "2f", position: { x: "52.1%", y: "38.6%" }, batch: "upper" },
+    { id: "s-core-2f", code: "S", color: "#94a3b8", floorId: "2f", position: { x: "51.5%", y: "46.4%" }, batch: "upper" },
+    { id: "l-core-2f", code: "L", color: "#eab308", floorId: "2f", position: { x: "52.3%", y: "55.1%" }, batch: "upper" },
+    { id: "a5-2f", code: "A5", color: "#f97316", floorId: "2f", position: { x: "13.3%", y: "29.8%" }, batch: "special" },
+    { id: "ht-core-2f", code: "HT", color: "#ef4444", floorId: "2f", position: { x: "52.0%", y: "58.8%" }, batch: "lower" },
+    { id: "sw-core-2f", code: "SW", color: "#06b6d4", floorId: "2f", position: { x: "47.2%", y: "67.2%" }, batch: "lower" },
+    { id: "se-core-2f", code: "SE", color: "#06b6d4", floorId: "2f", position: { x: "59.4%", y: "67.1%" }, batch: "lower" },
+  ],
+};
+
+export const floorPlans: FloorPlan[] = floorCatalog.map((floor, index) => ({
+  ...floor,
+  level: index,
+  entrance: floorEntrances[floor.id] ?? fallbackEntrance,
+  lifts: floorLifts[floor.id] ?? [],
+}));
 
 export const departments: Department[] = [
   {
-    id: "dept-4501",
-    code: "45.01",
-    name: "Advanced Tissue Archive",
-    shortName: "Tissue Archive",
-    buildingId: "tower-a",
-    floorId: "a-5f",
-    color: "#9f8bff",
-    glowColor: "rgba(159, 139, 255, 0.18)",
-    description: "位於 Tower A 5/F，展示高層樓板一樣可被定位。",
-    bounds: { left: "57%", top: "10%", width: "27%", height: "19%" },
+    id: "dept-gf-ae",
+    code: "10.02",
+    name: "Accident & Emergency Services",
+    floorId: "gf",
+    color: "#f59e0b",
+    target: { x: "79.2%", y: "44.1%" },
+    preferredLiftIds: ["s-core-gf", "l-core-gf"],
+    routeFromEntrance: [
+      { x: "86%", y: "55%" },
+      { x: "80.5%", y: "55%" },
+      { x: "80.5%", y: "45.5%" },
+      { x: "79.2%", y: "44.1%" },
+    ],
+    routeFromLift: [
+      { x: "51.1%", y: "46.7%" },
+      { x: "66%", y: "46.7%" },
+      { x: "74%", y: "44.8%" },
+      { x: "79.2%", y: "44.1%" },
+    ],
   },
   {
-    id: "dept-2703",
+    id: "dept-gf-rad",
+    code: "09.01",
+    name: "Radiology / Diagnostic MRI / CT Scanners / Ultrasonography",
+    floorId: "gf",
+    color: "#22c55e",
+    target: { x: "49.7%", y: "80.5%" },
+    preferredLiftIds: ["sw-core-gf", "se-core-gf"],
+    routeFromEntrance: [
+      { x: "86%", y: "55%" },
+      { x: "72%", y: "55%" },
+      { x: "72%", y: "73%" },
+      { x: "54%", y: "73%" },
+      { x: "49.7%", y: "80.5%" },
+    ],
+    routeFromLift: [
+      { x: "47.0%", y: "67.3%" },
+      { x: "47.0%", y: "73%" },
+      { x: "49.7%", y: "80.5%" },
+    ],
+  },
+  {
+    id: "dept-gf-reception",
+    code: "10.01.154",
+    name: "Reception",
+    floorId: "gf",
+    color: "#14b8a6",
+    target: { x: "34.6%", y: "61.8%" },
+    preferredLiftIds: ["a5-gf", "sw-core-gf"],
+    routeFromEntrance: [
+      { x: "86%", y: "55%" },
+      { x: "63%", y: "55%" },
+      { x: "44%", y: "55%" },
+      { x: "34.6%", y: "61.8%" },
+    ],
+    routeFromLift: [
+      { x: "47.0%", y: "67.3%" },
+      { x: "40.8%", y: "67.3%" },
+      { x: "34.6%", y: "61.8%" },
+    ],
+  },
+  {
+    id: "dept-1f-sopc",
+    code: "04.08",
+    name: "SOPC - Private Clinic",
+    floorId: "1f",
+    color: "#8b5cf6",
+    target: { x: "48.5%", y: "45.8%" },
+    preferredLiftIds: ["s-core-1f", "l-core-1f"],
+    routeFromEntrance: [
+      { x: "86%", y: "50%" },
+      { x: "69%", y: "50%" },
+      { x: "54%", y: "50%" },
+      { x: "48.5%", y: "45.8%" },
+    ],
+    routeFromLift: [
+      { x: "51.6%", y: "47.0%" },
+      { x: "48.5%", y: "47.0%" },
+      { x: "48.5%", y: "45.8%" },
+    ],
+  },
+  {
+    id: "dept-1f-pharmacy",
+    code: "08.01",
+    name: "Pharmacy",
+    floorId: "1f",
+    color: "#10b981",
+    target: { x: "85.8%", y: "31.5%" },
+    preferredLiftIds: ["sn-core-1f", "h-core-1f"],
+    routeFromEntrance: [
+      { x: "86%", y: "50%" },
+      { x: "86%", y: "31.5%" },
+      { x: "85.8%", y: "31.5%" },
+    ],
+    routeFromLift: [
+      { x: "52.3%", y: "38.8%" },
+      { x: "68%", y: "38.8%" },
+      { x: "80%", y: "31.5%" },
+      { x: "85.8%", y: "31.5%" },
+    ],
+  },
+  {
+    id: "dept-1f-foodcourt",
+    code: "12.03",
+    name: "Cafeteria - Food Court",
+    floorId: "1f",
+    color: "#06b6d4",
+    target: { x: "16.5%", y: "22.5%" },
+    preferredLiftIds: ["a5-1f", "sn-core-1f"],
+    routeFromEntrance: [
+      { x: "86%", y: "50%" },
+      { x: "54%", y: "50%" },
+      { x: "26%", y: "50%" },
+      { x: "16.5%", y: "22.5%" },
+    ],
+    routeFromLift: [
+      { x: "13.1%", y: "29.6%" },
+      { x: "16.5%", y: "29.6%" },
+      { x: "16.5%", y: "22.5%" },
+    ],
+  },
+  {
+    id: "dept-2f-it",
+    code: "20.02",
+    name: "IT & Communications (PABX)",
+    floorId: "2f",
+    color: "#60a5fa",
+    target: { x: "79.6%", y: "22.8%" },
+    preferredLiftIds: ["sn-core-2f", "h-core-2f"],
+    routeFromEntrance: [
+      { x: "83%", y: "56%" },
+      { x: "83%", y: "28%" },
+      { x: "79.6%", y: "22.8%" },
+    ],
+    routeFromLift: [
+      { x: "52.1%", y: "38.6%" },
+      { x: "65%", y: "38.6%" },
+      { x: "76%", y: "22.8%" },
+      { x: "79.6%", y: "22.8%" },
+    ],
+  },
+  {
+    id: "dept-2f-histo",
+    code: "07.02",
+    name: "Pathology - Histopathology",
+    floorId: "2f",
+    color: "#3b82f6",
+    target: { x: "13.8%", y: "69.4%" },
+    preferredLiftIds: ["a5-2f", "sw-core-2f"],
+    routeFromEntrance: [
+      { x: "83%", y: "56%" },
+      { x: "56%", y: "56%" },
+      { x: "28%", y: "56%" },
+      { x: "13.8%", y: "69.4%" },
+    ],
+    routeFromLift: [
+      { x: "47.2%", y: "67.2%" },
+      { x: "28%", y: "67.2%" },
+      { x: "13.8%", y: "69.4%" },
+    ],
+  },
+  {
+    id: "dept-2f-chem",
     code: "27.03",
-    name: "CUHK - Microbiology",
-    shortName: "Microbiology",
-    buildingId: "tower-a",
-    floorId: "a-3f",
-    color: "#8f74ff",
-    glowColor: "rgba(143, 116, 255, 0.22)",
-    description: "位於 Tower A 3/F 左上區域，適合用紫色高亮顯示。",
-    bounds: { left: "10%", top: "10%", width: "22%", height: "16%" },
-  },
-  {
-    id: "dept-0703",
-    code: "07.03",
-    name: "Pathology - Microbiology",
-    shortName: "Pathology",
-    buildingId: "tower-a",
-    floorId: "a-3f",
-    color: "#f174bf",
-    glowColor: "rgba(241, 116, 191, 0.22)",
-    description: "位於 Tower A 3/F 左側主功能區，展示較大範圍高亮。",
-    bounds: { left: "10%", top: "31%", width: "26%", height: "44%" },
-  },
-  {
-    id: "dept-2701",
-    code: "27.01",
-    name: "CUHK - Basic / Translational Research and Clinical Research Facilities",
-    shortName: "Clinical Research",
-    buildingId: "tower-a",
-    floorId: "a-3f",
-    color: "#34c96d",
-    glowColor: "rgba(52, 201, 109, 0.22)",
-    description: "位於 Tower A 3/F 右側大片研究空間。",
-    bounds: { left: "54%", top: "16%", width: "30%", height: "56%" },
-  },
-  {
-    id: "dept-3308",
-    code: "33.08",
-    name: "Cell Imaging Coordination Hub",
-    shortName: "Imaging Hub",
-    buildingId: "tower-a",
-    floorId: "a-4f",
-    color: "#47b8ff",
-    glowColor: "rgba(71, 184, 255, 0.18)",
-    description: "位於 Tower A 4/F，示範同一棟多層樓疊起效果。",
-    bounds: { left: "58%", top: "11%", width: "26%", height: "18%" },
-  },
-  {
-    id: "dept-1205",
-    code: "12.05",
-    name: "Genomics Lab Support",
-    shortName: "Genomics Support",
-    buildingId: "tower-a",
-    floorId: "a-2f",
-    color: "#44b6ff",
-    glowColor: "rgba(68, 182, 255, 0.20)",
-    description: "位於 Tower A 2/F 北側，示範跨樓層自動跳位。",
-    bounds: { left: "57%", top: "10%", width: "27%", height: "18%" },
-  },
-  {
-    id: "dept-6150",
-    code: "61.50",
-    name: "Public Education Suite",
-    shortName: "Education Suite",
-    buildingId: "tower-b",
-    floorId: "b-5f",
-    color: "#7dcb7a",
-    glowColor: "rgba(125, 203, 122, 0.18)",
-    description: "位於 Tower B 5/F，用作高層示範樓層。",
-    bounds: { left: "61%", top: "8%", width: "23%", height: "20%" },
-  },
-  {
-    id: "dept-g012",
-    code: "G0.12",
-    name: "Reception & Visitor Center",
-    shortName: "Reception",
-    buildingId: "tower-b",
-    floorId: "b-gf",
-    color: "#ffb64d",
-    glowColor: "rgba(255, 182, 77, 0.22)",
-    description: "位於 Tower B G/F 入口附近，適合作為訪客導覽目標。",
-    bounds: { left: "63%", top: "9%", width: "21%", height: "19%" },
-  },
-  {
-    id: "dept-2058",
-    code: "20.58",
-    name: "Pharmacy Support Cluster",
-    shortName: "Pharmacy Support",
-    buildingId: "tower-b",
-    floorId: "b-2f",
-    color: "#ff8f6b",
-    glowColor: "rgba(255, 143, 107, 0.18)",
-    description: "位於 Tower B 2/F，方便測試中段樓層定位。",
-    bounds: { left: "60%", top: "64%", width: "24%", height: "17%" },
-  },
-  {
-    id: "dept-1052",
-    code: "10.52",
-    name: "Imaging Preparation Suite",
-    shortName: "Imaging Suite",
-    buildingId: "tower-b",
-    floorId: "b-1f",
-    color: "#ff7f93",
-    glowColor: "rgba(255, 127, 147, 0.20)",
-    description: "位於 Tower B 1/F 東南角，示範第二棟樓切換。",
-    bounds: { left: "60%", top: "64%", width: "25%", height: "18%" },
+    name: "CUHK Chemical Pathology",
+    floorId: "2f",
+    color: "#ec4899",
+    target: { x: "84.2%", y: "49.8%" },
+    preferredLiftIds: ["se-core-2f", "ht-core-2f"],
+    routeFromEntrance: [
+      { x: "83%", y: "56%" },
+      { x: "84.2%", y: "56%" },
+      { x: "84.2%", y: "49.8%" },
+    ],
+    routeFromLift: [
+      { x: "59.4%", y: "67.1%" },
+      { x: "72%", y: "67.1%" },
+      { x: "84.2%", y: "49.8%" },
+    ],
   },
 ];
 
-export const defaultDepartmentId = departments[1].id;
+export const routeModes: Array<{ id: RouteMode; label: string }> = [
+  { id: "lift", label: "Lift" },
+  { id: "entrance", label: "Entry" },
+];
+
+export const defaultDepartmentId = departments[0].id;

@@ -1,173 +1,237 @@
-import { Building2, Layers3, LocateFixed, Route } from "lucide-react";
-import type { Building, Department, FloorPlan } from "@/data/directory";
+import { Layers3, MapPinned, Navigation } from "lucide-react";
+import {
+  type Department,
+  type FloorPlan,
+  type LiftGroup,
+  type RouteMode,
+} from "@/data/directory";
 
 type FloorMapProps = {
   floors: FloorPlan[];
-  activeFloor: FloorPlan;
-  departments: Department[];
-  selectedDepartment: Department;
-  building: Building;
-  onSelect: (id: string) => void;
+  floor: FloorPlan;
+  selectedDepartment: Department | null;
+  routeMode: RouteMode;
   onSelectFloor: (floorId: string) => void;
 };
 
 export default function FloorMap({
   floors,
-  activeFloor,
-  departments,
+  floor,
   selectedDepartment,
-  building,
-  onSelect,
+  routeMode,
   onSelectFloor,
 }: FloorMapProps) {
+  const hasDepartmentOverlay = selectedDepartment?.floorId === floor.id;
+  const routePoints = hasDepartmentOverlay
+    ? routeMode === "entrance"
+      ? selectedDepartment.routeFromEntrance
+      : selectedDepartment.routeFromLift
+    : [];
+  const routePath = routePoints
+    .map((point, index) => `${index === 0 ? "M" : "L"} ${parseFloat(point.x)} ${parseFloat(point.y)}`)
+    .join(" ");
+  const highlightedLiftIds = new Set(
+    hasDepartmentOverlay ? selectedDepartment.preferredLiftIds : [],
+  );
+  const stackFloors = [...floors].reverse();
+
   return (
-    <section className="rounded-[32px] border border-slate-200 bg-white p-5 shadow-[0_24px_64px_rgba(148,163,184,0.18)]">
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <p className="text-xs uppercase tracking-[0.32em] text-sky-500/80">
-            Interactive Floor Plan
-          </p>
-          <h2 className="mt-2 text-2xl font-semibold text-slate-900">
-            {building.name}
-          </h2>
-          <p className="mt-2 text-sm text-slate-500">
-            3D 疊層視圖會將所選樓層向前拉出，望落更似一棟 building。
-          </p>
+    <section className="rounded-[28px] border border-slate-200 bg-white p-3 shadow-[0_24px_64px_rgba(148,163,184,0.18)]">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex min-w-0 flex-1 gap-2 overflow-x-auto pb-1">
+          {floors.map((item) => {
+            const isActive = item.id === floor.id;
+
+            return (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => onSelectFloor(item.id)}
+                className={`rounded-full border px-3 py-2 text-sm transition ${
+                  isActive
+                    ? "border-sky-300 bg-sky-50 text-sky-700"
+                    : "border-slate-200 bg-white text-slate-500 hover:border-slate-300"
+                }`}
+              >
+                {item.label}
+              </button>
+            );
+          })}
         </div>
-        <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-xs uppercase tracking-[0.2em] text-slate-500">
-          <Layers3 className="h-4 w-4 text-sky-500" />
-          3D Stack View
+
+        <div className="flex items-center gap-2">
+          <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-2 text-xs uppercase tracking-[0.18em] text-slate-500">
+            <Layers3 className="h-4 w-4 text-sky-500" />
+            {floor.label}
+          </div>
+          {hasDepartmentOverlay ? (
+            <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-2 text-xs uppercase tracking-[0.18em] text-slate-500">
+              <Navigation className="h-4 w-4 text-sky-500" />
+              {routeMode === "lift" ? "Lift Route" : "Entry Route"}
+            </div>
+          ) : null}
         </div>
       </div>
 
-      <div className="rounded-[28px] border border-slate-200 bg-[#eef2f6] p-4">
-        <div className="relative h-[760px] overflow-hidden rounded-[24px] border border-slate-200 bg-[linear-gradient(180deg,#fdfefe_0%,#eef4fa_100%)]">
-          <div className="absolute inset-x-[14%] bottom-[6%] h-[72%] rounded-[40px] border border-slate-300/60 bg-[linear-gradient(180deg,rgba(255,255,255,0.8),rgba(226,232,240,0.78))] shadow-[0_40px_80px_rgba(148,163,184,0.28)]" />
-          <div className="absolute inset-y-[8%] left-[12%] w-px bg-slate-300/70" />
-          <div className="absolute inset-y-[8%] right-[12%] w-px bg-slate-300/70" />
+      <div className="grid gap-3 xl:grid-cols-[320px_minmax(0,1fr)]">
+        <div className="relative overflow-hidden rounded-[24px] border border-slate-200 bg-[radial-gradient(circle_at_top,_rgba(186,230,253,0.26),_rgba(248,250,252,0.98)_40%,_rgba(241,245,249,0.98)_100%)] px-4 py-5">
+          <div className="relative h-[520px] overflow-hidden">
+            <div className="absolute inset-x-14 bottom-4 top-7 rounded-[36px] bg-gradient-to-b from-slate-200/40 via-slate-300/20 to-slate-400/30 blur-xl" />
+            <div className="absolute left-1/2 top-14 h-[410px] w-[120px] -translate-x-1/2 rounded-[28px] bg-gradient-to-b from-white/80 via-slate-100/70 to-slate-200/50 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)]" />
+            <div
+              className="absolute left-[calc(50%-62px)] top-[72px] h-[376px] w-[24px] rounded-l-[20px] bg-gradient-to-b from-slate-200/85 to-slate-400/75"
+              style={{ transform: "skewY(36deg)" }}
+            />
+            <div
+              className="absolute left-[calc(50%+38px)] top-[72px] h-[376px] w-[24px] rounded-r-[20px] bg-gradient-to-b from-slate-100/85 to-slate-300/75"
+              style={{ transform: "skewY(-36deg)" }}
+            />
+            <div className="absolute left-1/2 top-12 h-[424px] w-[8px] -translate-x-1/2 rounded-full bg-gradient-to-b from-sky-100 via-slate-300/80 to-slate-400/70" />
+            {stackFloors.map((item) => {
+              const isActive = item.id === floor.id;
+              const stackIndex = floors.length - 1 - item.level;
+              const stackOffset = 18 + stackIndex * 11;
+              const scale = isActive ? 1.03 : 0.95;
+              const plateOpacity = isActive ? 1 : Math.max(0.42, 0.92 - stackIndex * 0.022);
+              const slabTransform = `perspective(1200px) rotateX(67deg) rotateZ(-28deg) scale(${scale})`;
 
-          {floors.map((floor, index) => {
-            const isActiveFloor = floor.id === activeFloor.id;
-            const floorDepartments = departments;
-            const deckTop = 90 + index * 74;
-            const pullOut = isActiveFloor ? 56 : 0;
-            const scale = isActiveFloor ? 1 : 0.95 - index * 0.01;
-            const deckHeight = isActiveFloor ? 182 : 138;
-
-            return (
-              <div
-                key={floor.id}
-                className="absolute left-[12%] right-[12%]"
-                style={{
-                  top: `${deckTop}px`,
-                  zIndex: floors.length - index + (isActiveFloor ? 20 : 0),
-                  transform: `translateX(${pullOut}px) translateY(${isActiveFloor ? -8 : 0}px) scale(${scale})`,
-                }}
-              >
+              return (
                 <button
+                  key={item.id}
                   type="button"
-                  onClick={() => onSelectFloor(floor.id)}
-                  className={`absolute -left-14 top-[44%] z-30 rounded-2xl border px-3 py-2 text-left shadow-sm transition ${
-                    isActiveFloor
-                      ? "border-sky-300 bg-sky-50 text-sky-700"
-                      : "border-slate-200 bg-white text-slate-500 hover:border-slate-300"
-                  }`}
+                  onClick={() => onSelectFloor(item.id)}
+                  className="absolute left-1/2 top-0 w-[208px] -translate-x-1/2 transition duration-300"
+                  style={{
+                    top: `${stackOffset}px`,
+                    transform: "translateX(-50%)",
+                    zIndex: isActive ? floors.length + 10 : item.level + 1,
+                    opacity: plateOpacity,
+                  }}
                 >
-                  <span className="block text-[11px] uppercase tracking-[0.2em]">Floor</span>
-                  <span className="block text-sm font-semibold">{floor.label}</span>
-                </button>
-
-                <div className="relative">
-                  <div className="absolute inset-x-[2%] top-full h-6 rounded-b-[24px] bg-slate-400/18 blur-md" />
-                  <div
-                    className="absolute inset-x-0 rounded-b-[28px] bg-[linear-gradient(180deg,rgba(148,163,184,0.34),rgba(100,116,139,0.24))]"
-                    style={{ top: `${deckHeight - 10}px`, height: "20px" }}
-                  />
-
-                  <div
-                    className="map-shell relative overflow-hidden rounded-[28px] border border-slate-200 bg-[#f8fafc] shadow-[0_20px_40px_rgba(148,163,184,0.16)]"
-                    style={{ height: `${deckHeight}px` }}
-                  >
-                    <Grid />
-
-                    {floor.blocks.map((block) => (
+                  <div className="relative h-[112px]">
+                    <div
+                      className="absolute inset-0 origin-center"
+                      style={{ transform: slabTransform }}
+                    >
                       <div
-                        key={`${floor.id}-${block.left}-${block.top}-${block.width}`}
-                        className="absolute rounded-[18px] border border-slate-300 bg-slate-100"
-                        style={block}
+                        className={`absolute bottom-[-11px] left-[12px] right-[18px] h-[13px] rounded-b-[12px] ${
+                          isActive ? "bg-sky-400/65" : "bg-slate-400/55"
+                        }`}
                       />
-                    ))}
-
-                    {floor.hallway.map((lane) => (
                       <div
-                        key={`${floor.id}-${lane.left}-${lane.top}-${lane.width}`}
-                        className="absolute rounded-[20px] border border-[#d9edf5] bg-[#e4f3fb]"
-                        style={lane}
+                        className={`absolute bottom-[-9px] right-[4px] top-[8px] w-[16px] rounded-r-[10px] ${
+                          isActive ? "bg-sky-200/90" : "bg-slate-200/92"
+                        }`}
+                        style={{ transform: "skewY(-34deg)" }}
                       />
-                    ))}
-
-                    <div className="absolute left-4 top-4 flex items-center gap-2 rounded-full bg-white/92 px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-700 shadow-sm">
-                      <Building2 className="h-4 w-4 text-sky-500" />
-                      {floor.label}
+                      <div
+                        className={`absolute bottom-[-9px] left-[2px] top-[8px] w-[14px] rounded-l-[10px] ${
+                          isActive ? "bg-sky-100/85" : "bg-white/95"
+                        }`}
+                        style={{ transform: "skewY(34deg)" }}
+                      />
+                      <div
+                        className={`relative overflow-hidden rounded-[18px] border p-1.5 shadow-[0_16px_30px_rgba(15,23,42,0.14)] transition ${
+                          isActive
+                            ? "border-sky-300 bg-white shadow-[0_28px_44px_rgba(59,130,246,0.22)]"
+                            : "border-slate-300/80 bg-white/94"
+                        }`}
+                      >
+                        <div
+                          className={`absolute inset-x-0 top-0 h-[7px] ${
+                            isActive ? "bg-sky-300/75" : "bg-slate-300/70"
+                          }`}
+                        />
+                        <img
+                          src={item.imagePath}
+                          alt={item.label}
+                          className="h-full w-full object-contain drop-shadow-[0_10px_16px_rgba(148,163,184,0.22)]"
+                        />
+                      </div>
                     </div>
+                  </div>
+                  <span
+                    className={`absolute left-[calc(100%+10px)] top-1/2 -translate-y-1/2 rounded-full border px-2 py-1 text-[10px] font-semibold tracking-[0.16em] shadow-sm ${
+                      isActive
+                        ? "border-sky-200 bg-sky-50 text-sky-700"
+                        : "border-slate-200 bg-white/92 text-slate-500"
+                    }`}
+                  >
+                    {item.label}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
 
-                    {isActiveFloor
-                      ? floorDepartments.map((department) => {
-                          const isActive = department.id === selectedDepartment.id;
+        <div className="relative overflow-hidden rounded-[24px] border border-slate-200 bg-[radial-gradient(circle_at_top,_rgba(186,230,253,0.18),_rgba(248,250,252,1)_58%)] p-3">
+          <div className="relative mx-auto aspect-[2384/3370] w-full max-w-[900px]">
+            <img
+              src={floor.imagePath}
+              alt={floor.label}
+              className="h-full w-full object-contain drop-shadow-[0_28px_36px_rgba(148,163,184,0.24)]"
+            />
 
-                          return (
-                            <button
-                              key={department.id}
-                              type="button"
-                              onClick={() => onSelect(department.id)}
-                              className="group absolute rounded-[24px] text-left transition"
-                              style={department.bounds}
-                            >
-                              <span
-                                className={`absolute inset-0 rounded-[24px] border-2 transition duration-300 ${
-                                  isActive ? "animate-pulse-subtle" : "opacity-75 group-hover:opacity-100"
-                                }`}
-                                style={{
-                                  backgroundColor: department.glowColor,
-                                  borderColor: department.color,
-                                  boxShadow: isActive
-                                    ? `0 0 0 1px ${department.color}, 0 8px 32px ${department.glowColor}`
-                                    : `0 0 0 1px ${department.color}`,
-                                }}
-                              />
-                              <span className="absolute left-3 top-3 rounded-full bg-white/90 px-3 py-1 text-[11px] font-semibold tracking-[0.18em] text-slate-800 shadow-sm">
-                                {department.code}
-                              </span>
-                              <span className="absolute bottom-3 left-3 right-3 rounded-2xl bg-white/85 px-3 py-2 text-sm text-slate-800 shadow-sm backdrop-blur">
-                                {department.shortName}
-                              </span>
-                              {isActive ? (
-                                <span
-                                  className="absolute -right-3 -top-3 flex h-8 w-8 items-center justify-center rounded-full border-4 border-white shadow-lg"
-                                  style={{ backgroundColor: department.color }}
-                                >
-                                  <LocateFixed className="h-4 w-4 text-white" />
-                                </span>
-                              ) : null}
-                            </button>
-                          );
-                        })
-                      : null}
+            {hasDepartmentOverlay ? (
+              <svg
+                viewBox="0 0 100 100"
+                preserveAspectRatio="none"
+                className="pointer-events-none absolute inset-0 h-full w-full"
+              >
+                <path
+                  d={routePath}
+                  fill="none"
+                  stroke={selectedDepartment.color}
+                  strokeWidth="0.72"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeDasharray={routeMode === "entrance" ? "0" : "1.6 1.1"}
+                  opacity="0.96"
+                />
+                {routePoints.map((point, index) => (
+                  <circle
+                    key={`${point.x}-${point.y}-${index}`}
+                    cx={parseFloat(point.x)}
+                    cy={parseFloat(point.y)}
+                    r={index === routePoints.length - 1 ? "0.95" : "0.52"}
+                    fill={selectedDepartment.color}
+                  />
+                ))}
+              </svg>
+            ) : null}
+
+            {floor.lifts.map((lift) => (
+              <LiftMarker
+                key={lift.id}
+                lift={lift}
+                highlighted={highlightedLiftIds.has(lift.id)}
+              />
+            ))}
+
+            {hasDepartmentOverlay ? (
+              <div
+                className="absolute -translate-x-1/2 -translate-y-1/2"
+                style={{ left: selectedDepartment.target.x, top: selectedDepartment.target.y }}
+              >
+                <div className="relative">
+                  <div
+                    className="absolute inset-0 scale-[1.9] rounded-full blur-lg"
+                    style={{ backgroundColor: `${selectedDepartment.color}66` }}
+                  />
+                  <div
+                    className="relative flex h-9 w-9 items-center justify-center rounded-full border-4 border-white shadow-[0_10px_24px_rgba(15,23,42,0.24)]"
+                    style={{ backgroundColor: selectedDepartment.color }}
+                  >
+                    <MapPinned className="h-4 w-4 text-white" />
                   </div>
                 </div>
               </div>
-            );
-          })}
+            ) : null}
 
-          <div className="absolute bottom-4 right-4 rounded-2xl border border-slate-200 bg-white/92 px-4 py-3 text-sm text-slate-800 shadow-[0_12px_40px_rgba(148,163,184,0.22)] backdrop-blur">
-            <div className="flex items-center gap-2">
-              <Route className="h-4 w-4 text-sky-500" />
-              <span className="font-medium">Current Focus</span>
+            <div className="absolute left-4 top-4 rounded-full border border-slate-200 bg-white/94 px-3 py-2 text-sm font-medium text-slate-700 shadow-sm">
+              {hasDepartmentOverlay ? selectedDepartment.code : floor.label}
             </div>
-            <p className="mt-2 text-slate-600">{selectedDepartment.name}</p>
-            <p className="text-xs uppercase tracking-[0.2em] text-slate-400">
-              {building.shortName} · {activeFloor.label}
-            </p>
           </div>
         </div>
       </div>
@@ -175,25 +239,33 @@ export default function FloorMap({
   );
 }
 
-function Grid() {
-  const lines = Array.from({ length: 12 }, (_, index) => index);
+type LiftMarkerProps = {
+  lift: LiftGroup;
+  highlighted: boolean;
+};
 
+function LiftMarker({ lift, highlighted }: LiftMarkerProps) {
   return (
-    <>
-      {lines.map((line) => (
-        <div
-          key={`vertical-${line}`}
-          className="absolute top-0 h-full border-l border-dashed border-slate-200"
-          style={{ left: `${(line + 1) * 7.6}%` }}
-        />
-      ))}
-      {lines.map((line) => (
-        <div
-          key={`horizontal-${line}`}
-          className="absolute left-0 w-full border-t border-dashed border-slate-200"
-          style={{ top: `${(line + 1) * 7.6}%` }}
-        />
-      ))}
-    </>
+    <div
+      className="absolute -translate-x-1/2 -translate-y-1/2"
+      style={{ left: lift.position.x, top: lift.position.y }}
+    >
+      <div
+        className={`rounded-2xl border px-2 py-1.5 shadow-sm transition ${
+          highlighted
+            ? "scale-110 border-white shadow-[0_12px_28px_rgba(15,23,42,0.22)]"
+            : "border-white/70"
+        }`}
+        style={{ backgroundColor: highlighted ? lift.color : `${lift.color}D9` }}
+      >
+        <div className="mb-1 flex gap-[2px]">
+          <span className="h-[2px] w-3 rounded-full bg-white/90" />
+          <span className="h-[2px] w-2 rounded-full bg-white/90" />
+        </div>
+        <div className="text-center text-[10px] font-semibold uppercase tracking-[0.16em] text-white">
+          {lift.code}
+        </div>
+      </div>
+    </div>
   );
 }

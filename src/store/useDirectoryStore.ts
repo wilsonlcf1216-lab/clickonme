@@ -1,15 +1,20 @@
 import { create } from "zustand";
-import { defaultDepartmentId, departments, floorPlans } from "@/data/directory";
+import {
+  defaultDepartmentId,
+  departments,
+  floorPlans,
+  type RouteMode,
+} from "@/data/directory";
 
 type DirectoryStore = {
   query: string;
-  selectedDepartmentId: string;
-  selectedBuildingId: string;
+  selectedDepartmentId: string | null;
   selectedFloorId: string;
+  routeMode: RouteMode;
   setQuery: (value: string) => void;
   selectDepartment: (id: string) => void;
-  selectBuilding: (buildingId: string) => void;
   selectFloor: (floorId: string) => void;
+  setRouteMode: (mode: RouteMode) => void;
 };
 
 const initialDepartment =
@@ -18,8 +23,8 @@ const initialDepartment =
 export const useDirectoryStore = create<DirectoryStore>((set) => ({
   query: "",
   selectedDepartmentId: initialDepartment.id,
-  selectedBuildingId: initialDepartment.buildingId,
   selectedFloorId: initialDepartment.floorId,
+  routeMode: "lift",
   setQuery: (value) => set({ query: value }),
   selectDepartment: (id) => {
     const department = departments.find((item) => item.id === id);
@@ -30,25 +35,8 @@ export const useDirectoryStore = create<DirectoryStore>((set) => ({
 
     set({
       selectedDepartmentId: department.id,
-      selectedBuildingId: department.buildingId,
       selectedFloorId: department.floorId,
     });
-  },
-  selectBuilding: (buildingId) => {
-    const buildingFloors = floorPlans
-      .filter((floor) => floor.buildingId === buildingId)
-      .sort((left, right) => right.stackOrder - left.stackOrder);
-    const nextFloor = buildingFloors[0];
-    const matchingDepartment = departments.find(
-      (department) =>
-        department.buildingId === buildingId && department.floorId === nextFloor?.id,
-    );
-
-    set((state) => ({
-      selectedBuildingId: buildingId,
-      selectedFloorId: nextFloor?.id ?? state.selectedFloorId,
-      selectedDepartmentId: matchingDepartment?.id ?? state.selectedDepartmentId,
-    }));
   },
   selectFloor: (floorId) => {
     const matchingDepartment = departments.find((department) => department.floorId === floorId);
@@ -58,10 +46,10 @@ export const useDirectoryStore = create<DirectoryStore>((set) => ({
       return;
     }
 
-    set((state) => ({
-      selectedBuildingId: floor.buildingId,
+    set(() => ({
       selectedFloorId: floorId,
-      selectedDepartmentId: matchingDepartment?.id ?? state.selectedDepartmentId,
+      selectedDepartmentId: matchingDepartment?.id ?? null,
     }));
   },
+  setRouteMode: (mode) => set({ routeMode: mode }),
 }));
