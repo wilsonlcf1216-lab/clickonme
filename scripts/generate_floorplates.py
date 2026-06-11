@@ -4,9 +4,11 @@ from collections import deque
 from pathlib import Path
 
 import fitz
-from PIL import Image, ImageEnhance, ImageFilter, ImageOps
+from PIL import Image, ImageFilter
 
 
+PDF_PATH = Path("/workspace/ipb_signoff.pdf")
+OUTPUT_DIR = Path("/workspace/public/floorplates")
 FLOOR_IDS = [
     "b02",
     "b01",
@@ -31,141 +33,58 @@ FLOOR_IDS = [
     "18f",
     "19f",
 ]
-
-PDF_PATH = Path("/workspace/ipb_signoff.pdf")
-OUTPUT_DIR = Path("/workspace/public/floorplates")
-PDF_SCALE = 2.4
-RAW_WIDTH = 260
-SIMPLIFY_WIDTH = 420
+PDF_SCALE = 2.6
+RAW_WIDTH = 300
 OUTPUT_WIDTH = 1600
-MASK_MARGIN = 24
-CORE_MASK_MARGIN = 10
+MASK_MARGIN = 18
+DEPARTMENT_FILL = (201, 220, 241, 255)
+CORRIDOR_FILL = (250, 252, 255, 255)
+OUTLINE_FILL = (107, 130, 156, 255)
+CORRIDOR_OUTLINE_FILL = (198, 211, 226, 255)
 
 
-def trim_sparse_bbox(
-    mask: Image.Image,
-    bbox: tuple[int, int, int, int],
-    *,
-    probe: int = 18,
-    coverage_threshold: float = 0.18,
-) -> tuple[int, int, int, int]:
-    pixels = mask.load()
-    left, top, right, bottom = bbox
-
-    def band_ratio(current_bbox: tuple[int, int, int, int], edge: str) -> float:
-        current_left, current_top, current_right, current_bottom = current_bbox
-        width = current_right - current_left
-        height = current_bottom - current_top
-
-        if width <= 0 or height <= 0:
-            return 1.0
-
-        if edge in {"left", "right"}:
-            band = min(probe, width)
-            x_start = current_left if edge == "left" else current_right - band
-            total = band * height
-            filled = sum(
-                1
-                for y in range(current_top, current_bottom)
-                for x in range(x_start, x_start + band)
-                if pixels[x, y] > 0
-            )
-        else:
-            band = min(probe, height)
-            y_start = current_top if edge == "top" else current_bottom - band
-            total = width * band
-            filled = sum(
-                1
-                for y in range(y_start, y_start + band)
-                for x in range(current_left, current_right)
-                if pixels[x, y] > 0
-            )
-
-        return filled / total if total else 1.0
-
-    while right - left > probe and band_ratio((left, top, right, bottom), "left") < coverage_threshold:
-        left += probe
-    while right - left > probe and band_ratio((left, top, right, bottom), "right") < coverage_threshold:
-        right -= probe
-    while bottom - top > probe and band_ratio((left, top, right, bottom), "top") < coverage_threshold:
-        top += probe
-    while bottom - top > probe and band_ratio((left, top, right, bottom), "bottom") < coverage_threshold:
-        bottom -= probe
-
-    return left, top, right, bottom
-
-
-def build_floor_mask(image: Image.Image, *, strict: bool = False) -> Image.Image:
-    small = image.resize(
+def resize_for_analysis(image: Image.Image) -> Image.Image:
+    return image.resize(
         (RAW_WIDTH, int(image.height * RAW_WIDTH / image.width)),
         Image.Resampling.BILINEAR,
     )
-    src = small.load()
-    mask = Image.new("L", small.size, 0)
-    dst = mask.load()
-
-    for y in range(small.height):
-        for x in range(small.width):
-            red, green, blue = src[x, y]
-            max_channel = max(red, green, blue)
-            min_channel = min(red, green, blue)
-            saturation = max_channel - min_channel
-            luminance = (red + green + blue) / 3
-
-            if strict:
-                # Use a tighter core to decide the true floorplate bounds.
-                keep_pixel = (saturation > 18 and luminance < 242) or luminance < 148
-            else:
-                # Keep colored zones, corridors and dark structural walls.
-                keep_pixel = (saturation > 10 and luminance < 248) or luminance < 170
-
-            if keep_pixel:
-                dst[x, y] = 255
-
-    filter_sizes = (5, 7) if strict else (5, 7, 9)
-    for size in filter_sizes:
-        mask = mask.filter(ImageFilter.MaxFilter(size))
-
-    blur_radius = 1.2 if strict else 1.8
-    threshold = 40 if strict else 28
-    mask = mask.filter(ImageFilter.GaussianBlur(blur_radius))
-    mask = mask.point(lambda value: 255 if value > threshold else 0)
-    return keep_largest_component(mask)
 
 
 def keep_largest_component(mask: Image.Image) -> Image.Image:
     width, height = mask.size
-    src = mask.load()
-    visited = [[False] * width for _ in range(height)]
+    pixels = mask.load()
+    visited: set[tuple[int, int]] = set()
     largest_component: list[tuple[int, int]] = []
 
     for y in range(height):
         for x in range(width):
-            if visited[y][x] or src[x, y] == 0:
+            if pixels[x, y] == 0 or (x, y) in visited:
                 continue
 
             queue = deque([(x, y)])
-            visited[y][x] = True
+            visited.add((x, y))
             component: list[tuple[int, int]] = []
 
             while queue:
                 current_x, current_y = queue.popleft()
                 component.append((current_x, current_y))
 
-                for next_x, next_y in (
-                    (current_x + 1, current_y),
-                    (current_x - 1, current_y),
-                    (current_x, current_y + 1),
-                    (current_x, current_y - 1),
-                ):
+                for delta_x, delta_y in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                    next_x = current_x + delta_x
+                    next_y = current_y + delta_y
+
                     if (
-                        0 <= next_x < width
-                        and 0 <= next_y < height
-                        and not visited[next_y][next_x]
-                        and src[next_x, next_y] > 0
+                        next_x < 0
+                        or next_x >= width
+                        or next_y < 0
+                        or next_y >= height
+                        or pixels[next_x, next_y] == 0
+                        or (next_x, next_y) in visited
                     ):
-                        visited[next_y][next_x] = True
-                        queue.append((next_x, next_y))
+                        continue
+
+                    visited.add((next_x, next_y))
+                    queue.append((next_x, next_y))
 
             if len(component) > len(largest_component):
                 largest_component = component
@@ -176,68 +95,228 @@ def keep_largest_component(mask: Image.Image) -> Image.Image:
     for x, y in largest_component:
         result_pixels[x, y] = 255
 
-    result = result.filter(ImageFilter.MaxFilter(5))
-    result = result.filter(ImageFilter.GaussianBlur(1.2))
-    return result.point(lambda value: 255 if value > 20 else 0)
+    return result
 
 
-def simplify_floor_image(image: Image.Image, mask: Image.Image) -> Image.Image:
-    core_mask = build_floor_mask(image, strict=True)
-    simplified = image.resize(
-        (SIMPLIFY_WIDTH, int(image.height * SIMPLIFY_WIDTH / image.width)),
-        Image.Resampling.BILINEAR,
+def remove_small_components(mask: Image.Image, minimum_area: int) -> Image.Image:
+    width, height = mask.size
+    pixels = mask.load()
+    visited: set[tuple[int, int]] = set()
+    result = Image.new("L", mask.size, 0)
+    result_pixels = result.load()
+
+    for y in range(height):
+        for x in range(width):
+            if pixels[x, y] == 0 or (x, y) in visited:
+                continue
+
+            queue = deque([(x, y)])
+            visited.add((x, y))
+            component: list[tuple[int, int]] = []
+
+            while queue:
+                current_x, current_y = queue.popleft()
+                component.append((current_x, current_y))
+
+                for delta_x, delta_y in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                    next_x = current_x + delta_x
+                    next_y = current_y + delta_y
+
+                    if (
+                        next_x < 0
+                        or next_x >= width
+                        or next_y < 0
+                        or next_y >= height
+                        or pixels[next_x, next_y] == 0
+                        or (next_x, next_y) in visited
+                    ):
+                        continue
+
+                    visited.add((next_x, next_y))
+                    queue.append((next_x, next_y))
+
+            if len(component) < minimum_area:
+                continue
+
+            for point_x, point_y in component:
+                result_pixels[point_x, point_y] = 255
+
+    return result
+
+
+def fill_mask_holes(mask: Image.Image) -> Image.Image:
+    width, height = mask.size
+    pixels = mask.load()
+    visited: set[tuple[int, int]] = set()
+    background = Image.new("L", mask.size, 0)
+    background_pixels = background.load()
+    queue = deque()
+
+    for x in range(width):
+        if pixels[x, 0] == 0:
+            queue.append((x, 0))
+        if pixels[x, height - 1] == 0:
+            queue.append((x, height - 1))
+
+    for y in range(height):
+        if pixels[0, y] == 0:
+            queue.append((0, y))
+        if pixels[width - 1, y] == 0:
+            queue.append((width - 1, y))
+
+    while queue:
+        current_x, current_y = queue.popleft()
+
+        if (
+            current_x < 0
+            or current_x >= width
+            or current_y < 0
+            or current_y >= height
+            or pixels[current_x, current_y] > 0
+            or (current_x, current_y) in visited
+        ):
+            continue
+
+        visited.add((current_x, current_y))
+        background_pixels[current_x, current_y] = 255
+
+        for delta_x, delta_y in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+            queue.append((current_x + delta_x, current_y + delta_y))
+
+    filled = Image.new("L", mask.size, 0)
+    filled_pixels = filled.load()
+
+    for y in range(height):
+        for x in range(width):
+            if pixels[x, y] > 0 or background_pixels[x, y] == 0:
+                filled_pixels[x, y] = 255
+
+    return filled
+
+
+def build_floor_mask(image: Image.Image) -> Image.Image:
+    small = resize_for_analysis(image)
+    mask = Image.new("L", small.size, 0)
+    src = small.load()
+    dst = mask.load()
+
+    for y in range(small.height):
+        for x in range(small.width):
+            red, green, blue = src[x, y]
+            max_channel = max(red, green, blue)
+            min_channel = min(red, green, blue)
+            saturation = max_channel - min_channel
+            luminance = (red + green + blue) / 3
+
+            if (saturation > 10 and luminance < 248) or luminance < 180:
+                dst[x, y] = 255
+
+    mask = mask.filter(ImageFilter.MaxFilter(5))
+    mask = mask.filter(ImageFilter.MaxFilter(7))
+    mask = keep_largest_component(mask)
+    mask = mask.filter(ImageFilter.MaxFilter(9))
+    mask = mask.filter(ImageFilter.MinFilter(7))
+    mask = fill_mask_holes(mask)
+    mask = mask.filter(ImageFilter.MaxFilter(5))
+    mask = mask.filter(ImageFilter.MinFilter(5))
+    return mask
+
+
+def build_corridor_mask(image: Image.Image, floor_mask: Image.Image) -> Image.Image:
+    small = resize_for_analysis(image)
+    src = small.load()
+    floor_pixels = floor_mask.load()
+    corridor = Image.new("L", small.size, 0)
+    corridor_pixels = corridor.load()
+
+    for y in range(small.height):
+        for x in range(small.width):
+            if floor_pixels[x, y] == 0:
+                continue
+
+            red, green, blue = src[x, y]
+            max_channel = max(red, green, blue)
+            min_channel = min(red, green, blue)
+            saturation = max_channel - min_channel
+            luminance = (red + green + blue) / 3
+
+            # Keep the major bright neutral circulation spaces only.
+            if luminance > 214 and saturation < 24:
+                corridor_pixels[x, y] = 255
+
+    corridor = corridor.filter(ImageFilter.MaxFilter(5))
+    corridor = corridor.filter(ImageFilter.MinFilter(3))
+    corridor = corridor.filter(ImageFilter.MaxFilter(3))
+
+    floor_area = sum(1 for value in floor_mask.tobytes() if value > 0)
+    minimum_area = max(40, floor_area // 180)
+    corridor = remove_small_components(corridor, minimum_area)
+    corridor = corridor.filter(ImageFilter.MaxFilter(3))
+
+    clipped = Image.new("L", corridor.size, 0)
+    clipped_pixels = clipped.load()
+    corridor_pixels = corridor.load()
+
+    for y in range(corridor.height):
+        for x in range(corridor.width):
+            if corridor_pixels[x, y] > 0 and floor_pixels[x, y] > 0:
+                clipped_pixels[x, y] = 255
+
+    return clipped
+
+
+def trim_bbox(mask: Image.Image) -> tuple[int, int, int, int] | None:
+    bbox = mask.getbbox()
+
+    if not bbox:
+        return None
+
+    left, top, right, bottom = bbox
+    return (
+        max(0, left - MASK_MARGIN),
+        max(0, top - MASK_MARGIN),
+        min(mask.width, right + MASK_MARGIN),
+        min(mask.height, bottom + MASK_MARGIN),
     )
-    simplified = ImageOps.autocontrast(simplified, cutoff=1)
-    simplified = simplified.filter(ImageFilter.MedianFilter(3))
-    simplified = ImageOps.posterize(simplified, 5)
-    detailed = simplified.resize(
-        (OUTPUT_WIDTH, int(simplified.height * OUTPUT_WIDTH / simplified.width)),
-        Image.Resampling.BILINEAR,
+
+
+def render_floorplate(image: Image.Image) -> Image.Image:
+    floor_mask_small = build_floor_mask(image)
+    corridor_mask_small = build_corridor_mask(image, floor_mask_small)
+
+    output_height = int(image.height * OUTPUT_WIDTH / image.width)
+    floor_mask = floor_mask_small.resize((OUTPUT_WIDTH, output_height), Image.Resampling.NEAREST)
+    corridor_mask = corridor_mask_small.resize(
+        (OUTPUT_WIDTH, output_height),
+        Image.Resampling.NEAREST,
     )
-    detailed = ImageEnhance.Color(detailed).enhance(1.06)
-    detailed = ImageEnhance.Contrast(detailed).enhance(1.06)
-    detailed = ImageEnhance.Sharpness(detailed).enhance(1.32)
 
-    enlarged_mask = mask.resize(detailed.size, Image.Resampling.LANCZOS)
-    enlarged_core_mask = core_mask.resize(detailed.size, Image.Resampling.LANCZOS)
-    core_bbox = enlarged_core_mask.getbbox()
-    bounding_box = None
-    margin = MASK_MARGIN
+    bbox = trim_bbox(floor_mask)
+    if bbox:
+        image = image.resize((OUTPUT_WIDTH, output_height), Image.Resampling.LANCZOS).crop(bbox)
+        floor_mask = floor_mask.crop(bbox)
+        corridor_mask = corridor_mask.crop(bbox)
+    else:
+        image = image.resize((OUTPUT_WIDTH, output_height), Image.Resampling.LANCZOS)
 
-    if core_bbox:
-        bounding_box = trim_sparse_bbox(
-            enlarged_core_mask,
-            core_bbox,
-            probe=14,
-            coverage_threshold=0.22,
-        )
-        margin = CORE_MASK_MARGIN
-    elif enlarged_mask.getbbox():
-        bounding_box = trim_sparse_bbox(enlarged_mask, enlarged_mask.getbbox())
+    canvas = Image.new("RGBA", image.size, (0, 0, 0, 0))
+    department_fill = Image.new("RGBA", image.size, DEPARTMENT_FILL)
+    corridor_fill = Image.new("RGBA", image.size, CORRIDOR_FILL)
+    outline_fill = Image.new("RGBA", image.size, OUTLINE_FILL)
+    corridor_outline_fill = Image.new("RGBA", image.size, CORRIDOR_OUTLINE_FILL)
 
-    if bounding_box:
-        left, top, right, bottom = bounding_box
-        bounding_box = (
-            max(0, left - margin),
-            max(0, top - margin),
-            min(detailed.width, right + margin),
-            min(detailed.height, bottom + margin),
-        )
-        detailed = detailed.crop(bounding_box)
-        enlarged_mask = enlarged_mask.crop(bounding_box)
+    canvas.paste(department_fill, (0, 0), floor_mask)
+    canvas.paste(corridor_fill, (0, 0), corridor_mask)
 
-    canvas = Image.new("RGBA", detailed.size, (0, 0, 0, 0))
-    base_fill = Image.new("RGBA", detailed.size, (226, 236, 247, 108))
-    canvas.paste(base_fill, (0, 0), enlarged_mask)
+    floor_outline = floor_mask.filter(ImageFilter.FIND_EDGES).point(
+        lambda value: 255 if value > 0 else 0
+    )
+    corridor_outline = corridor_mask.filter(ImageFilter.FIND_EDGES).point(
+        lambda value: 255 if value > 0 else 0
+    )
 
-    map_rgba = detailed.convert("RGBA")
-    map_rgba.putalpha(enlarged_mask)
-    canvas = Image.alpha_composite(canvas, map_rgba)
-
-    outline = enlarged_mask.filter(ImageFilter.FIND_EDGES)
-    outline = outline.point(lambda value: 255 if value > 10 else 0)
-    edge = Image.new("RGBA", detailed.size, (120, 145, 176, 232))
-    canvas.paste(edge, (0, 0), outline)
+    canvas.paste(outline_fill, (0, 0), floor_outline)
+    canvas.paste(corridor_outline_fill, (0, 0), corridor_outline)
     return canvas
 
 
@@ -251,10 +330,9 @@ def main() -> None:
             alpha=False,
         )
         image = Image.frombytes("RGB", (pixmap.width, pixmap.height), pixmap.samples)
-        mask = build_floor_mask(image)
-        simplified = simplify_floor_image(image, mask)
-        simplified.save(OUTPUT_DIR / f"{floor_id}.png")
-        print(f"saved {floor_id}")
+        rendered = render_floorplate(image)
+        rendered.save(OUTPUT_DIR / f"{floor_id}.png")
+        print(f"generated {floor_id}.png")
 
 
 if __name__ == "__main__":
