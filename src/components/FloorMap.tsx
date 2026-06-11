@@ -37,6 +37,10 @@ export default function FloorMap({
   const highlightedLiftIds = new Set(
     hasDepartmentOverlay ? selectedDepartment.preferredLiftIds : [],
   );
+  const visibleDepartmentMarkers = departmentsOnFloor.filter(
+    (department) =>
+      department.markerVisibility !== "selected" || department.id === selectedDepartment?.id,
+  );
   const stackFloors = [...floors].reverse();
   const towerMinHeight = Math.max(760, floors.length * 28 + 210);
   const towerStep = 28;
@@ -230,7 +234,7 @@ export default function FloorMap({
               />
             ))}
 
-            {departmentsOnFloor.map((department) => {
+            {visibleDepartmentMarkers.map((department) => {
               const isSelected = selectedDepartment?.id === department.id;
 
               return (

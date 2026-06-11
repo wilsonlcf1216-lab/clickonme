@@ -39,7 +39,6 @@ export const useDirectoryStore = create<DirectoryStore>((set) => ({
     });
   },
   selectFloor: (floorId) => {
-    const matchingDepartment = departments.find((department) => department.floorId === floorId);
     const floor = floorPlans.find((item) => item.id === floorId);
 
     if (!floor) {
@@ -48,7 +47,7 @@ export const useDirectoryStore = create<DirectoryStore>((set) => ({
 
     set(() => ({
       selectedFloorId: floorId,
-      selectedDepartmentId: matchingDepartment?.id ?? null,
+      selectedDepartmentId: null,
     }));
   },
   setRouteMode: (mode) => set({ routeMode: mode }),
