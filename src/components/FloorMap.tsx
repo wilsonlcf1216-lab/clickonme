@@ -34,9 +34,12 @@ export default function FloorMap({
     hasDepartmentOverlay ? selectedDepartment.preferredLiftIds : [],
   );
   const stackFloors = [...floors].reverse();
+  const towerMinHeight = Math.max(760, floors.length * 28 + 210);
+  const towerStep = 28;
+  const towerFrameHeight = "calc(100vh - 230px)";
 
   return (
-    <section className="rounded-[28px] border border-slate-200 bg-white p-3 shadow-[0_24px_64px_rgba(148,163,184,0.18)]">
+    <section className="rounded-[28px] border border-slate-200 bg-white p-3 shadow-[0_24px_64px_rgba(148,163,184,0.18)] xl:p-4">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
         <div className="flex min-w-0 flex-1 gap-2 overflow-x-auto pb-1">
           {floors.map((item) => {
@@ -73,34 +76,37 @@ export default function FloorMap({
         </div>
       </div>
 
-      <div className="grid gap-3 xl:grid-cols-[320px_minmax(0,1fr)]">
+      <div className="grid gap-3 xl:grid-cols-[400px_minmax(0,1fr)]">
         <div className="relative overflow-hidden rounded-[24px] border border-slate-200 bg-[radial-gradient(circle_at_top,_rgba(186,230,253,0.26),_rgba(248,250,252,0.98)_40%,_rgba(241,245,249,0.98)_100%)] px-4 py-5">
-          <div className="relative h-[520px] overflow-hidden">
-            <div className="absolute inset-x-14 bottom-4 top-7 rounded-[36px] bg-gradient-to-b from-slate-200/40 via-slate-300/20 to-slate-400/30 blur-xl" />
-            <div className="absolute left-1/2 top-14 h-[410px] w-[120px] -translate-x-1/2 rounded-[28px] bg-gradient-to-b from-white/80 via-slate-100/70 to-slate-200/50 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)]" />
+          <div
+            className="relative overflow-hidden"
+            style={{ minHeight: `${towerMinHeight}px`, height: towerFrameHeight }}
+          >
+            <div className="absolute inset-x-10 bottom-3 top-4 rounded-[44px] bg-gradient-to-b from-slate-200/40 via-slate-300/20 to-slate-400/30 blur-xl" />
+            <div className="absolute left-1/2 top-10 h-[calc(100%-96px)] w-[154px] -translate-x-1/2 rounded-[28px] bg-gradient-to-b from-white/80 via-slate-100/70 to-slate-200/50 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)]" />
             <div
-              className="absolute left-[calc(50%-62px)] top-[72px] h-[376px] w-[24px] rounded-l-[20px] bg-gradient-to-b from-slate-200/85 to-slate-400/75"
+              className="absolute left-[calc(50%-80px)] top-[64px] h-[calc(100%-128px)] w-[26px] rounded-l-[20px] bg-gradient-to-b from-slate-200/85 to-slate-400/75"
               style={{ transform: "skewY(36deg)" }}
             />
             <div
-              className="absolute left-[calc(50%+38px)] top-[72px] h-[376px] w-[24px] rounded-r-[20px] bg-gradient-to-b from-slate-100/85 to-slate-300/75"
+              className="absolute left-[calc(50%+54px)] top-[64px] h-[calc(100%-128px)] w-[26px] rounded-r-[20px] bg-gradient-to-b from-slate-100/85 to-slate-300/75"
               style={{ transform: "skewY(-36deg)" }}
             />
-            <div className="absolute left-1/2 top-12 h-[424px] w-[8px] -translate-x-1/2 rounded-full bg-gradient-to-b from-sky-100 via-slate-300/80 to-slate-400/70" />
+            <div className="absolute left-1/2 top-10 h-[calc(100%-108px)] w-[8px] -translate-x-1/2 rounded-full bg-gradient-to-b from-sky-100 via-slate-300/80 to-slate-400/70" />
             {stackFloors.map((item) => {
               const isActive = item.id === floor.id;
               const stackIndex = floors.length - 1 - item.level;
-              const stackOffset = 18 + stackIndex * 11;
-              const scale = isActive ? 1.03 : 0.95;
-              const plateOpacity = isActive ? 1 : Math.max(0.42, 0.92 - stackIndex * 0.022);
-              const slabTransform = `perspective(1200px) rotateX(67deg) rotateZ(-28deg) scale(${scale})`;
+              const stackOffset = 20 + stackIndex * towerStep;
+              const plateOpacity = isActive ? 1 : Math.max(0.56, 0.98 - stackIndex * 0.015);
+              const slabTransform =
+                "perspective(1200px) rotateX(67deg) rotateZ(-28deg) scale(0.98)";
 
               return (
                 <button
                   key={item.id}
                   type="button"
                   onClick={() => onSelectFloor(item.id)}
-                  className="absolute left-1/2 top-0 w-[208px] -translate-x-1/2 transition duration-300"
+                  className="absolute left-1/2 top-0 w-[250px] -translate-x-1/2 transition duration-300"
                   style={{
                     top: `${stackOffset}px`,
                     transform: "translateX(-50%)",
@@ -108,32 +114,32 @@ export default function FloorMap({
                     opacity: plateOpacity,
                   }}
                 >
-                  <div className="relative h-[112px]">
+                  <div className="relative h-[128px]">
                     <div
                       className="absolute inset-0 origin-center"
                       style={{ transform: slabTransform }}
                     >
                       <div
-                        className={`absolute bottom-[-11px] left-[12px] right-[18px] h-[13px] rounded-b-[12px] ${
-                          isActive ? "bg-sky-400/65" : "bg-slate-400/55"
+                        className={`absolute bottom-[-11px] left-[14px] right-[22px] h-[14px] rounded-b-[12px] ${
+                          isActive ? "bg-sky-400/70" : "bg-slate-400/58"
                         }`}
                       />
                       <div
-                        className={`absolute bottom-[-9px] right-[4px] top-[8px] w-[16px] rounded-r-[10px] ${
-                          isActive ? "bg-sky-200/90" : "bg-slate-200/92"
+                        className={`absolute bottom-[-9px] right-[4px] top-[8px] w-[18px] rounded-r-[10px] ${
+                          isActive ? "bg-sky-100/88" : "bg-slate-200/92"
                         }`}
                         style={{ transform: "skewY(-34deg)" }}
                       />
                       <div
-                        className={`absolute bottom-[-9px] left-[2px] top-[8px] w-[14px] rounded-l-[10px] ${
-                          isActive ? "bg-sky-100/85" : "bg-white/95"
+                        className={`absolute bottom-[-9px] left-[2px] top-[8px] w-[16px] rounded-l-[10px] ${
+                          isActive ? "bg-white/98" : "bg-white/95"
                         }`}
                         style={{ transform: "skewY(34deg)" }}
                       />
                       <div
                         className={`relative overflow-hidden rounded-[18px] border p-1.5 shadow-[0_16px_30px_rgba(15,23,42,0.14)] transition ${
                           isActive
-                            ? "border-sky-300 bg-white shadow-[0_28px_44px_rgba(59,130,246,0.22)]"
+                            ? "border-sky-300 bg-white shadow-[0_16px_28px_rgba(59,130,246,0.14)]"
                             : "border-slate-300/80 bg-white/94"
                         }`}
                       >
@@ -151,7 +157,7 @@ export default function FloorMap({
                     </div>
                   </div>
                   <span
-                    className={`absolute left-[calc(100%+10px)] top-1/2 -translate-y-1/2 rounded-full border px-2 py-1 text-[10px] font-semibold tracking-[0.16em] shadow-sm ${
+                    className={`absolute left-[calc(100%+6px)] top-1/2 -translate-y-1/2 rounded-full border px-2 py-1 text-[10px] font-semibold tracking-[0.16em] shadow-sm ${
                       isActive
                         ? "border-sky-200 bg-sky-50 text-sky-700"
                         : "border-slate-200 bg-white/92 text-slate-500"
@@ -166,11 +172,14 @@ export default function FloorMap({
         </div>
 
         <div className="relative overflow-hidden rounded-[24px] border border-slate-200 bg-[radial-gradient(circle_at_top,_rgba(186,230,253,0.18),_rgba(248,250,252,1)_58%)] p-3">
-          <div className="relative mx-auto aspect-[2384/3370] w-full max-w-[900px]">
+          <div
+            className="relative mx-auto flex w-full items-center justify-center"
+            style={{ minHeight: `${towerMinHeight}px`, height: towerFrameHeight }}
+          >
             <img
               src={floor.imagePath}
               alt={floor.label}
-              className="h-full w-full object-contain drop-shadow-[0_28px_36px_rgba(148,163,184,0.24)]"
+              className="h-auto max-h-[calc(100vh-270px)] w-full object-contain drop-shadow-[0_28px_36px_rgba(148,163,184,0.24)]"
             />
 
             {hasDepartmentOverlay ? (

@@ -1,3 +1,4 @@
+import { useEffect, useMemo, useRef } from "react";
 import { DoorOpen, Navigation } from "lucide-react";
 import DepartmentList from "@/components/DepartmentList";
 import FloorMap from "@/components/FloorMap";
@@ -16,11 +17,10 @@ export default function Home() {
     setRouteMode,
   } = useDirectoryStore();
 
+  const keyword = query.trim().toLowerCase();
   const filteredDepartments = departments.filter((department) => {
-    const keyword = query.trim().toLowerCase();
-
     if (!keyword) {
-      return true;
+      return false;
     }
 
     return (
@@ -29,6 +29,38 @@ export default function Home() {
       department.floorId.toLowerCase().includes(keyword)
     );
   });
+  const exactDepartmentMatch = useMemo(
+    () =>
+      departments.find((department) => {
+        if (!keyword) {
+          return false;
+        }
+
+        return (
+          department.code.toLowerCase() === keyword ||
+          department.name.toLowerCase() === keyword
+        );
+      }) ?? null,
+    [keyword],
+  );
+  const autoSelectedMatch =
+    exactDepartmentMatch ?? (filteredDepartments.length === 1 ? filteredDepartments[0] : null);
+  const autoSelectedMatchId = autoSelectedMatch?.id ?? null;
+  const lastAutoSelectedMatchId = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!autoSelectedMatchId) {
+      lastAutoSelectedMatchId.current = null;
+      return;
+    }
+
+    if (lastAutoSelectedMatchId.current === autoSelectedMatchId) {
+      return;
+    }
+
+    lastAutoSelectedMatchId.current = autoSelectedMatchId;
+    selectDepartment(autoSelectedMatchId);
+  }, [autoSelectedMatchId, selectDepartment]);
 
   const selectedDepartment =
     departments.find((department) => department.id === selectedDepartmentId) ?? null;
@@ -66,26 +98,23 @@ export default function Home() {
           })}
         </section>
 
-        <section className="grid gap-4 xl:grid-cols-[320px_minmax(0,1fr)]">
+        <section className="mb-4">
           <DepartmentList
             departments={filteredDepartments}
             floors={floorPlans}
             query={query}
-            selectedDepartmentId={selectedDepartment?.id ?? null}
             onQueryChange={setQuery}
             onSelect={selectDepartment}
           />
-
-          <div className="space-y-4">
-            <FloorMap
-              floors={floorPlans}
-              floor={selectedFloor}
-              selectedDepartment={visibleDepartment}
-              routeMode={routeMode}
-              onSelectFloor={selectFloor}
-            />
-          </div>
         </section>
+
+        <FloorMap
+          floors={floorPlans}
+          floor={selectedFloor}
+          selectedDepartment={visibleDepartment}
+          routeMode={routeMode}
+          onSelectFloor={selectFloor}
+        />
       </div>
     </main>
   );
