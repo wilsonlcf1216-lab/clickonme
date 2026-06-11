@@ -4,7 +4,7 @@ from collections import deque
 from pathlib import Path
 
 import fitz
-from PIL import Image, ImageFilter, ImageOps
+from PIL import Image, ImageEnhance, ImageFilter, ImageOps
 
 
 FLOOR_IDS = [
@@ -34,9 +34,10 @@ FLOOR_IDS = [
 
 PDF_PATH = Path("/workspace/ipb_signoff.pdf")
 OUTPUT_DIR = Path("/workspace/public/floorplates")
+PDF_SCALE = 2.4
 RAW_WIDTH = 260
-POSTER_WIDTH = 180
-OUTPUT_WIDTH = 1100
+SIMPLIFY_WIDTH = 420
+OUTPUT_WIDTH = 1600
 MASK_MARGIN = 24
 CORE_MASK_MARGIN = 10
 
@@ -182,19 +183,23 @@ def keep_largest_component(mask: Image.Image) -> Image.Image:
 
 def simplify_floor_image(image: Image.Image, mask: Image.Image) -> Image.Image:
     core_mask = build_floor_mask(image, strict=True)
-    poster = image.resize(
-        (POSTER_WIDTH, int(image.height * POSTER_WIDTH / image.width)),
+    simplified = image.resize(
+        (SIMPLIFY_WIDTH, int(image.height * SIMPLIFY_WIDTH / image.width)),
         Image.Resampling.BILINEAR,
     )
-    poster = poster.filter(ImageFilter.GaussianBlur(1.4))
-    poster = ImageOps.posterize(poster, 4)
-    poster = poster.resize(
-        (OUTPUT_WIDTH, int(poster.height * OUTPUT_WIDTH / poster.width)),
+    simplified = ImageOps.autocontrast(simplified, cutoff=1)
+    simplified = simplified.filter(ImageFilter.MedianFilter(3))
+    simplified = ImageOps.posterize(simplified, 5)
+    detailed = simplified.resize(
+        (OUTPUT_WIDTH, int(simplified.height * OUTPUT_WIDTH / simplified.width)),
         Image.Resampling.BILINEAR,
     )
+    detailed = ImageEnhance.Color(detailed).enhance(1.06)
+    detailed = ImageEnhance.Contrast(detailed).enhance(1.06)
+    detailed = ImageEnhance.Sharpness(detailed).enhance(1.32)
 
-    enlarged_mask = mask.resize(poster.size, Image.Resampling.LANCZOS)
-    enlarged_core_mask = core_mask.resize(poster.size, Image.Resampling.LANCZOS)
+    enlarged_mask = mask.resize(detailed.size, Image.Resampling.LANCZOS)
+    enlarged_core_mask = core_mask.resize(detailed.size, Image.Resampling.LANCZOS)
     core_bbox = enlarged_core_mask.getbbox()
     bounding_box = None
     margin = MASK_MARGIN
@@ -215,23 +220,23 @@ def simplify_floor_image(image: Image.Image, mask: Image.Image) -> Image.Image:
         bounding_box = (
             max(0, left - margin),
             max(0, top - margin),
-            min(poster.width, right + margin),
-            min(poster.height, bottom + margin),
+            min(detailed.width, right + margin),
+            min(detailed.height, bottom + margin),
         )
-        poster = poster.crop(bounding_box)
+        detailed = detailed.crop(bounding_box)
         enlarged_mask = enlarged_mask.crop(bounding_box)
 
-    canvas = Image.new("RGBA", poster.size, (0, 0, 0, 0))
-    base_fill = Image.new("RGBA", poster.size, (222, 232, 244, 210))
+    canvas = Image.new("RGBA", detailed.size, (0, 0, 0, 0))
+    base_fill = Image.new("RGBA", detailed.size, (226, 236, 247, 108))
     canvas.paste(base_fill, (0, 0), enlarged_mask)
 
-    map_rgba = poster.convert("RGBA")
+    map_rgba = detailed.convert("RGBA")
     map_rgba.putalpha(enlarged_mask)
     canvas = Image.alpha_composite(canvas, map_rgba)
 
     outline = enlarged_mask.filter(ImageFilter.FIND_EDGES)
-    outline = outline.point(lambda value: 255 if value > 6 else 0)
-    edge = Image.new("RGBA", poster.size, (130, 152, 180, 255))
+    outline = outline.point(lambda value: 255 if value > 10 else 0)
+    edge = Image.new("RGBA", detailed.size, (120, 145, 176, 232))
     canvas.paste(edge, (0, 0), outline)
     return canvas
 
@@ -241,7 +246,10 @@ def main() -> None:
     pdf = fitz.open(PDF_PATH)
 
     for page_index, floor_id in enumerate(FLOOR_IDS):
-        pixmap = pdf.load_page(page_index).get_pixmap(matrix=fitz.Matrix(1.0, 1.0), alpha=False)
+        pixmap = pdf.load_page(page_index).get_pixmap(
+            matrix=fitz.Matrix(PDF_SCALE, PDF_SCALE),
+            alpha=False,
+        )
         image = Image.frombytes("RGB", (pixmap.width, pixmap.height), pixmap.samples)
         mask = build_floor_mask(image)
         simplified = simplify_floor_image(image, mask)

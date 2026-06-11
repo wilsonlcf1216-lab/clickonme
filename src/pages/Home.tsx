@@ -111,8 +111,12 @@ export default function Home() {
         <FloorMap
           floors={floorPlans}
           floor={selectedFloor}
+          departmentsOnFloor={departments.filter(
+            (department) => department.floorId === selectedFloor.id,
+          )}
           selectedDepartment={visibleDepartment}
           routeMode={routeMode}
+          onSelectDepartment={selectDepartment}
           onSelectFloor={selectFloor}
         />
       </div>

@@ -9,16 +9,20 @@ import {
 type FloorMapProps = {
   floors: FloorPlan[];
   floor: FloorPlan;
+  departmentsOnFloor: Department[];
   selectedDepartment: Department | null;
   routeMode: RouteMode;
+  onSelectDepartment: (departmentId: string) => void;
   onSelectFloor: (floorId: string) => void;
 };
 
 export default function FloorMap({
   floors,
   floor,
+  departmentsOnFloor,
   selectedDepartment,
   routeMode,
+  onSelectDepartment,
   onSelectFloor,
 }: FloorMapProps) {
   const hasDepartmentOverlay = selectedDepartment?.floorId === floor.id;
@@ -82,17 +86,7 @@ export default function FloorMap({
             className="relative overflow-hidden"
             style={{ minHeight: `${towerMinHeight}px`, height: towerFrameHeight }}
           >
-            <div className="absolute inset-x-10 bottom-3 top-4 rounded-[44px] bg-gradient-to-b from-slate-200/40 via-slate-300/20 to-slate-400/30 blur-xl" />
-            <div className="absolute left-1/2 top-10 h-[calc(100%-96px)] w-[154px] -translate-x-1/2 rounded-[28px] bg-gradient-to-b from-white/80 via-slate-100/70 to-slate-200/50 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)]" />
-            <div
-              className="absolute left-[calc(50%-80px)] top-[64px] h-[calc(100%-128px)] w-[26px] rounded-l-[20px] bg-gradient-to-b from-slate-200/85 to-slate-400/75"
-              style={{ transform: "skewY(36deg)" }}
-            />
-            <div
-              className="absolute left-[calc(50%+54px)] top-[64px] h-[calc(100%-128px)] w-[26px] rounded-r-[20px] bg-gradient-to-b from-slate-100/85 to-slate-300/75"
-              style={{ transform: "skewY(-36deg)" }}
-            />
-            <div className="absolute left-1/2 top-10 h-[calc(100%-108px)] w-[8px] -translate-x-1/2 rounded-full bg-gradient-to-b from-sky-100 via-slate-300/80 to-slate-400/70" />
+            <div className="absolute inset-x-12 bottom-8 top-8 rounded-[40px] bg-gradient-to-b from-white/68 via-slate-100/54 to-slate-200/42" />
             {stackFloors.map((item) => {
               const isActive = item.id === floor.id;
               const stackIndex = floors.length - 1 - item.level;
@@ -151,7 +145,7 @@ export default function FloorMap({
                         <img
                           src={item.imagePath}
                           alt={item.label}
-                          className="h-full w-full object-contain drop-shadow-[0_10px_16px_rgba(148,163,184,0.22)]"
+                          className="h-full w-full object-contain"
                         />
                       </div>
                     </div>
@@ -179,7 +173,7 @@ export default function FloorMap({
             <img
               src={floor.imagePath}
               alt={floor.label}
-              className="h-auto max-h-[calc(100vh-270px)] w-full object-contain drop-shadow-[0_28px_36px_rgba(148,163,184,0.24)]"
+              className="h-auto max-h-[calc(100vh-270px)] w-full object-contain"
             />
 
             {hasDepartmentOverlay ? (
@@ -191,8 +185,17 @@ export default function FloorMap({
                 <path
                   d={routePath}
                   fill="none"
+                  stroke="rgba(255,255,255,0.95)"
+                  strokeWidth="1.38"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  opacity="0.98"
+                />
+                <path
+                  d={routePath}
+                  fill="none"
                   stroke={selectedDepartment.color}
-                  strokeWidth="0.72"
+                  strokeWidth="0.82"
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeDasharray={routeMode === "entrance" ? "0" : "1.6 1.1"}
@@ -203,7 +206,16 @@ export default function FloorMap({
                     key={`${point.x}-${point.y}-${index}`}
                     cx={parseFloat(point.x)}
                     cy={parseFloat(point.y)}
-                    r={index === routePoints.length - 1 ? "0.95" : "0.52"}
+                    r={index === routePoints.length - 1 ? "1.05" : "0.62"}
+                    fill="white"
+                  />
+                ))}
+                {routePoints.map((point, index) => (
+                  <circle
+                    key={`inner-${point.x}-${point.y}-${index}`}
+                    cx={parseFloat(point.x)}
+                    cy={parseFloat(point.y)}
+                    r={index === routePoints.length - 1 ? "0.72" : "0.42"}
                     fill={selectedDepartment.color}
                   />
                 ))}
@@ -218,25 +230,51 @@ export default function FloorMap({
               />
             ))}
 
-            {hasDepartmentOverlay ? (
-              <div
-                className="absolute -translate-x-1/2 -translate-y-1/2"
-                style={{ left: selectedDepartment.target.x, top: selectedDepartment.target.y }}
-              >
-                <div className="relative">
-                  <div
-                    className="absolute inset-0 scale-[1.9] rounded-full blur-lg"
-                    style={{ backgroundColor: `${selectedDepartment.color}66` }}
-                  />
-                  <div
-                    className="relative flex h-9 w-9 items-center justify-center rounded-full border-4 border-white shadow-[0_10px_24px_rgba(15,23,42,0.24)]"
-                    style={{ backgroundColor: selectedDepartment.color }}
-                  >
-                    <MapPinned className="h-4 w-4 text-white" />
+            {departmentsOnFloor.map((department) => {
+              const isSelected = selectedDepartment?.id === department.id;
+
+              return (
+                <button
+                  key={department.id}
+                  type="button"
+                  onClick={() => onSelectDepartment(department.id)}
+                  className="absolute -translate-x-1/2 -translate-y-1/2"
+                  style={{ left: department.target.x, top: department.target.y }}
+                >
+                  <div className="relative">
+                    <div
+                      className={`absolute inset-0 rounded-full ${
+                        isSelected ? "scale-[2.2] blur-lg" : "scale-[1.7] blur-md"
+                      }`}
+                      style={{ backgroundColor: `${department.color}${isSelected ? "66" : "4D"}` }}
+                    />
+                    <div
+                      className={`relative flex items-center gap-1 rounded-full border px-2 py-1 shadow-[0_10px_24px_rgba(15,23,42,0.16)] transition ${
+                        isSelected ? "border-white bg-white/96" : "border-white/80 bg-white/88"
+                      }`}
+                    >
+                      <div
+                        className={`flex items-center justify-center rounded-full ${
+                          isSelected ? "h-8 w-8" : "h-6 w-6"
+                        }`}
+                        style={{ backgroundColor: department.color }}
+                      >
+                        <MapPinned
+                          className={`${isSelected ? "h-4 w-4" : "h-3.5 w-3.5"} text-white`}
+                        />
+                      </div>
+                      <span
+                        className={`font-semibold uppercase tracking-[0.14em] ${
+                          isSelected ? "text-[10px] text-slate-800" : "text-[9px] text-slate-600"
+                        }`}
+                      >
+                        {department.code}
+                      </span>
+                    </div>
                   </div>
-                </div>
-              </div>
-            ) : null}
+                </button>
+              );
+            })}
 
             <div className="absolute left-4 top-4 rounded-full border border-slate-200 bg-white/94 px-3 py-2 text-sm font-medium text-slate-700 shadow-sm">
               {hasDepartmentOverlay ? selectedDepartment.code : floor.label}
