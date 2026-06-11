@@ -1,9 +1,8 @@
-import { MapPinned, Search, Sparkles } from "lucide-react";
-import type { Building, Department, FloorPlan } from "@/data/directory";
+import { Search } from "lucide-react";
+import type { Department, FloorPlan } from "@/data/directory";
 
 type DepartmentListProps = {
   departments: Department[];
-  buildings: Building[];
   floors: FloorPlan[];
   query: string;
   selectedDepartmentId: string;
@@ -13,7 +12,6 @@ type DepartmentListProps = {
 
 export default function DepartmentList({
   departments,
-  buildings,
   floors,
   query,
   selectedDepartmentId,
@@ -21,18 +19,8 @@ export default function DepartmentList({
   onSelect,
 }: DepartmentListProps) {
   return (
-    <section className="rounded-[28px] border border-slate-200 bg-white/95 p-5 shadow-[0_24px_64px_rgba(148,163,184,0.18)]">
-      <div className="mb-4 flex items-center justify-between">
-        <div>
-          <p className="text-xs uppercase tracking-[0.32em] text-sky-500/80">
-            Department List
-          </p>
-          <h2 className="mt-2 text-2xl font-semibold text-slate-900">定位清單</h2>
-        </div>
-        <div className="rounded-full border border-sky-200 bg-sky-50 p-2 text-sky-600">
-          <Sparkles className="h-4 w-4" />
-        </div>
-      </div>
+    <section className="rounded-[28px] border border-slate-200 bg-white/95 p-4 shadow-[0_24px_64px_rgba(148,163,184,0.18)]">
+      <h2 className="mb-4 text-lg font-semibold text-slate-900">Department List</h2>
 
       <label className="group relative mb-4 block">
         <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 transition group-focus-within:text-sky-500" />
@@ -47,7 +35,6 @@ export default function DepartmentList({
       <div className="space-y-3">
         {departments.map((department) => {
           const isActive = department.id === selectedDepartmentId;
-          const building = buildings.find((item) => item.id === department.buildingId);
           const floor = floors.find((item) => item.id === department.floorId);
 
           return (
@@ -74,7 +61,7 @@ export default function DepartmentList({
                   </div>
                   <div>
                     <p className="text-base font-semibold text-slate-900">
-                      {department.shortName}
+                      {department.code}
                     </p>
                     <p className="mt-1 text-sm leading-6 text-slate-600">
                       {department.name}
@@ -85,14 +72,7 @@ export default function DepartmentList({
 
               <div className="mt-3 flex flex-wrap items-center gap-2 text-[11px] uppercase tracking-[0.18em] text-slate-500">
                 <span className="rounded-full border border-slate-200 bg-slate-50 px-2 py-1">
-                  {building?.shortName ?? department.buildingId}
-                </span>
-                <span className="rounded-full border border-slate-200 bg-slate-50 px-2 py-1">
                   {floor?.label ?? department.floorId}
-                </span>
-                <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-1 text-emerald-700">
-                  <MapPinned className="h-3 w-3" />
-                  Auto Jump
                 </span>
               </div>
             </button>
