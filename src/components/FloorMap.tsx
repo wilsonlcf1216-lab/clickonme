@@ -77,47 +77,78 @@ export default function FloorMap({
         <div className="relative overflow-hidden rounded-[24px] border border-slate-200 bg-[radial-gradient(circle_at_top,_rgba(186,230,253,0.26),_rgba(248,250,252,0.98)_40%,_rgba(241,245,249,0.98)_100%)] px-4 py-5">
           <div className="relative h-[520px] overflow-hidden">
             <div className="absolute inset-x-14 bottom-4 top-7 rounded-[36px] bg-gradient-to-b from-slate-200/40 via-slate-300/20 to-slate-400/30 blur-xl" />
-            <div className="absolute left-1/2 top-10 h-[430px] w-[150px] -translate-x-1/2 rounded-[32px] border border-white/70 bg-gradient-to-b from-white/80 via-slate-100/70 to-slate-200/55 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)]" />
-            <div className="absolute left-1/2 top-12 h-[424px] w-[9px] -translate-x-1/2 rounded-full bg-gradient-to-b from-sky-100 via-slate-300/80 to-slate-400/70" />
-            <div className="absolute left-[calc(50%-80px)] top-12 h-[424px] w-[6px] rounded-full bg-gradient-to-b from-white/80 to-slate-300/80" />
-            <div className="absolute left-[calc(50%+74px)] top-12 h-[424px] w-[6px] rounded-full bg-gradient-to-b from-white/80 to-slate-300/80" />
+            <div className="absolute left-1/2 top-14 h-[410px] w-[120px] -translate-x-1/2 rounded-[28px] bg-gradient-to-b from-white/80 via-slate-100/70 to-slate-200/50 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)]" />
+            <div
+              className="absolute left-[calc(50%-62px)] top-[72px] h-[376px] w-[24px] rounded-l-[20px] bg-gradient-to-b from-slate-200/85 to-slate-400/75"
+              style={{ transform: "skewY(36deg)" }}
+            />
+            <div
+              className="absolute left-[calc(50%+38px)] top-[72px] h-[376px] w-[24px] rounded-r-[20px] bg-gradient-to-b from-slate-100/85 to-slate-300/75"
+              style={{ transform: "skewY(-36deg)" }}
+            />
+            <div className="absolute left-1/2 top-12 h-[424px] w-[8px] -translate-x-1/2 rounded-full bg-gradient-to-b from-sky-100 via-slate-300/80 to-slate-400/70" />
             {stackFloors.map((item) => {
               const isActive = item.id === floor.id;
               const stackIndex = floors.length - 1 - item.level;
-              const stackOffset = 16 + stackIndex * 11;
-              const scale = isActive ? 1.04 : 0.94;
+              const stackOffset = 18 + stackIndex * 11;
+              const scale = isActive ? 1.03 : 0.95;
               const plateOpacity = isActive ? 1 : Math.max(0.42, 0.92 - stackIndex * 0.022);
+              const slabTransform = `perspective(1200px) rotateX(67deg) rotateZ(-28deg) scale(${scale})`;
 
               return (
                 <button
                   key={item.id}
                   type="button"
                   onClick={() => onSelectFloor(item.id)}
-                  className="absolute left-1/2 top-0 w-[188px] -translate-x-1/2 transition duration-300"
+                  className="absolute left-1/2 top-0 w-[208px] -translate-x-1/2 transition duration-300"
                   style={{
                     top: `${stackOffset}px`,
-                    transform: `translateX(-50%) scale(${scale})`,
+                    transform: "translateX(-50%)",
                     zIndex: isActive ? floors.length + 10 : item.level + 1,
                     opacity: plateOpacity,
                   }}
                 >
-                  <div
-                    className={`relative overflow-hidden rounded-[18px] border p-1.5 shadow-[0_14px_24px_rgba(15,23,42,0.12)] transition ${
-                      isActive
-                        ? "border-sky-300 bg-white shadow-[0_26px_42px_rgba(59,130,246,0.2)]"
-                        : "border-slate-300/80 bg-white/92"
-                    }`}
-                  >
+                  <div className="relative h-[112px]">
                     <div
-                      className={`absolute inset-x-0 top-0 h-[7px] ${
-                        isActive ? "bg-sky-300/75" : "bg-slate-300/70"
-                      }`}
-                    />
-                    <img
-                      src={item.imagePath}
-                      alt={item.label}
-                      className="h-full w-full object-contain drop-shadow-[0_10px_16px_rgba(148,163,184,0.22)]"
-                    />
+                      className="absolute inset-0 origin-center"
+                      style={{ transform: slabTransform }}
+                    >
+                      <div
+                        className={`absolute bottom-[-11px] left-[12px] right-[18px] h-[13px] rounded-b-[12px] ${
+                          isActive ? "bg-sky-400/65" : "bg-slate-400/55"
+                        }`}
+                      />
+                      <div
+                        className={`absolute bottom-[-9px] right-[4px] top-[8px] w-[16px] rounded-r-[10px] ${
+                          isActive ? "bg-sky-200/90" : "bg-slate-200/92"
+                        }`}
+                        style={{ transform: "skewY(-34deg)" }}
+                      />
+                      <div
+                        className={`absolute bottom-[-9px] left-[2px] top-[8px] w-[14px] rounded-l-[10px] ${
+                          isActive ? "bg-sky-100/85" : "bg-white/95"
+                        }`}
+                        style={{ transform: "skewY(34deg)" }}
+                      />
+                      <div
+                        className={`relative overflow-hidden rounded-[18px] border p-1.5 shadow-[0_16px_30px_rgba(15,23,42,0.14)] transition ${
+                          isActive
+                            ? "border-sky-300 bg-white shadow-[0_28px_44px_rgba(59,130,246,0.22)]"
+                            : "border-slate-300/80 bg-white/94"
+                        }`}
+                      >
+                        <div
+                          className={`absolute inset-x-0 top-0 h-[7px] ${
+                            isActive ? "bg-sky-300/75" : "bg-slate-300/70"
+                          }`}
+                        />
+                        <img
+                          src={item.imagePath}
+                          alt={item.label}
+                          className="h-full w-full object-contain drop-shadow-[0_10px_16px_rgba(148,163,184,0.22)]"
+                        />
+                      </div>
+                    </div>
                   </div>
                   <span
                     className={`absolute left-[calc(100%+10px)] top-1/2 -translate-y-1/2 rounded-full border px-2 py-1 text-[10px] font-semibold tracking-[0.16em] shadow-sm ${
