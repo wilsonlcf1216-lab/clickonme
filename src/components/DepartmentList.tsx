@@ -5,7 +5,7 @@ type DepartmentListProps = {
   departments: Department[];
   floors: FloorPlan[];
   query: string;
-  selectedDepartmentId: string;
+  selectedDepartmentId: string | null;
   onQueryChange: (value: string) => void;
   onSelect: (id: string) => void;
 };
