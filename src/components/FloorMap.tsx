@@ -73,45 +73,57 @@ export default function FloorMap({
         </div>
       </div>
 
-      <div className="grid gap-3 xl:grid-cols-[280px_minmax(0,1fr)]">
-        <div className="relative overflow-hidden rounded-[24px] border border-slate-200 bg-[radial-gradient(circle_at_top,_rgba(186,230,253,0.28),_rgba(248,250,252,0.98)_55%)] px-4 py-5">
-          <div className="relative h-[420px] overflow-hidden">
+      <div className="grid gap-3 xl:grid-cols-[320px_minmax(0,1fr)]">
+        <div className="relative overflow-hidden rounded-[24px] border border-slate-200 bg-[radial-gradient(circle_at_top,_rgba(186,230,253,0.26),_rgba(248,250,252,0.98)_40%,_rgba(241,245,249,0.98)_100%)] px-4 py-5">
+          <div className="relative h-[520px] overflow-hidden">
+            <div className="absolute inset-x-14 bottom-4 top-7 rounded-[36px] bg-gradient-to-b from-slate-200/40 via-slate-300/20 to-slate-400/30 blur-xl" />
+            <div className="absolute left-1/2 top-10 h-[430px] w-[150px] -translate-x-1/2 rounded-[32px] border border-white/70 bg-gradient-to-b from-white/80 via-slate-100/70 to-slate-200/55 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)]" />
+            <div className="absolute left-1/2 top-12 h-[424px] w-[9px] -translate-x-1/2 rounded-full bg-gradient-to-b from-sky-100 via-slate-300/80 to-slate-400/70" />
+            <div className="absolute left-[calc(50%-80px)] top-12 h-[424px] w-[6px] rounded-full bg-gradient-to-b from-white/80 to-slate-300/80" />
+            <div className="absolute left-[calc(50%+74px)] top-12 h-[424px] w-[6px] rounded-full bg-gradient-to-b from-white/80 to-slate-300/80" />
             {stackFloors.map((item) => {
               const isActive = item.id === floor.id;
-              const stackOffset = (floors.length - 1 - item.level) * 14;
-              const scale = 0.76 + item.level * 0.008 + (isActive ? 0.08 : 0);
+              const stackIndex = floors.length - 1 - item.level;
+              const stackOffset = 16 + stackIndex * 11;
+              const scale = isActive ? 1.04 : 0.94;
+              const plateOpacity = isActive ? 1 : Math.max(0.42, 0.92 - stackIndex * 0.022);
 
               return (
                 <button
                   key={item.id}
                   type="button"
                   onClick={() => onSelectFloor(item.id)}
-                  className="absolute left-1/2 top-0 w-[216px] -translate-x-1/2 transition duration-300"
+                  className="absolute left-1/2 top-0 w-[188px] -translate-x-1/2 transition duration-300"
                   style={{
                     top: `${stackOffset}px`,
                     transform: `translateX(-50%) scale(${scale})`,
                     zIndex: isActive ? floors.length + 10 : item.level + 1,
-                    opacity: isActive ? 1 : 0.56 + item.level * 0.015,
+                    opacity: plateOpacity,
                   }}
                 >
                   <div
-                    className={`overflow-hidden rounded-[22px] border p-3 shadow-[0_18px_40px_rgba(15,23,42,0.12)] transition ${
+                    className={`relative overflow-hidden rounded-[18px] border p-1.5 shadow-[0_14px_24px_rgba(15,23,42,0.12)] transition ${
                       isActive
-                        ? "border-sky-300 bg-white shadow-[0_24px_48px_rgba(59,130,246,0.18)]"
-                        : "border-slate-200 bg-white/90"
+                        ? "border-sky-300 bg-white shadow-[0_26px_42px_rgba(59,130,246,0.2)]"
+                        : "border-slate-300/80 bg-white/92"
                     }`}
                   >
+                    <div
+                      className={`absolute inset-x-0 top-0 h-[7px] ${
+                        isActive ? "bg-sky-300/75" : "bg-slate-300/70"
+                      }`}
+                    />
                     <img
                       src={item.imagePath}
                       alt={item.label}
-                      className="h-full w-full object-contain drop-shadow-[0_18px_24px_rgba(148,163,184,0.28)]"
+                      className="h-full w-full object-contain drop-shadow-[0_10px_16px_rgba(148,163,184,0.22)]"
                     />
                   </div>
                   <span
-                    className={`mt-2 inline-flex rounded-full border px-2 py-1 text-[10px] font-semibold tracking-[0.16em] ${
+                    className={`absolute left-[calc(100%+10px)] top-1/2 -translate-y-1/2 rounded-full border px-2 py-1 text-[10px] font-semibold tracking-[0.16em] shadow-sm ${
                       isActive
                         ? "border-sky-200 bg-sky-50 text-sky-700"
-                        : "border-slate-200 bg-white text-slate-500"
+                        : "border-slate-200 bg-white/92 text-slate-500"
                     }`}
                   >
                     {item.label}
