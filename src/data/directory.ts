@@ -15,6 +15,7 @@ export type LiftGroup = {
 export type FloorPlan = {
   id: string;
   label: string;
+  level: number;
   imagePath: string;
   entrance: MapPoint;
   lifts: LiftGroup[];
@@ -34,56 +35,78 @@ export type Department = {
 
 export type RouteMode = "entrance" | "lift";
 
-export const floorPlans: FloorPlan[] = [
-  {
-    id: "gf",
-    label: "G/F",
-    imagePath: "floorplans/gf.png",
-    entrance: { x: "86%", y: "55%" },
-    lifts: [
-      { id: "sn-core-gf", code: "SN", color: "#0ea5e9", floorId: "gf", position: { x: "52.3%", y: "28.6%" }, batch: "upper" },
-      { id: "h-core-gf", code: "H", color: "#facc15", floorId: "gf", position: { x: "51.6%", y: "37.9%" }, batch: "upper" },
-      { id: "s-core-gf", code: "S", color: "#fde047", floorId: "gf", position: { x: "51.1%", y: "46.7%" }, batch: "upper" },
-      { id: "l-core-gf", code: "L", color: "#eab308", floorId: "gf", position: { x: "51.3%", y: "55.5%" }, batch: "upper" },
-      { id: "a5-gf", code: "A5", color: "#f97316", floorId: "gf", position: { x: "13.3%", y: "31.1%" }, batch: "special" },
-      { id: "ht-core-gf", code: "HT", color: "#ef4444", floorId: "gf", position: { x: "52.2%", y: "58.2%" }, batch: "lower" },
-      { id: "sw-core-gf", code: "SW", color: "#06b6d4", floorId: "gf", position: { x: "47.0%", y: "67.3%" }, batch: "lower" },
-      { id: "se-core-gf", code: "SE", color: "#06b6d4", floorId: "gf", position: { x: "59.8%", y: "67.3%" }, batch: "lower" },
-    ],
-  },
-  {
-    id: "1f",
-    label: "1/F",
-    imagePath: "floorplans/1f.png",
-    entrance: { x: "86%", y: "50%" },
-    lifts: [
-      { id: "sn-core-1f", code: "SN", color: "#0ea5e9", floorId: "1f", position: { x: "53.1%", y: "29.8%" }, batch: "upper" },
-      { id: "h-core-1f", code: "H", color: "#94a3b8", floorId: "1f", position: { x: "52.3%", y: "38.8%" }, batch: "upper" },
-      { id: "s-core-1f", code: "S", color: "#94a3b8", floorId: "1f", position: { x: "51.6%", y: "47.0%" }, batch: "upper" },
-      { id: "l-core-1f", code: "L", color: "#eab308", floorId: "1f", position: { x: "52.4%", y: "55.3%" }, batch: "upper" },
-      { id: "a5-1f", code: "A5", color: "#f97316", floorId: "1f", position: { x: "13.1%", y: "29.6%" }, batch: "special" },
-      { id: "ht-core-1f", code: "HT", color: "#ef4444", floorId: "1f", position: { x: "52.0%", y: "58.5%" }, batch: "lower" },
-      { id: "sw-core-1f", code: "SW", color: "#06b6d4", floorId: "1f", position: { x: "47.3%", y: "66.8%" }, batch: "lower" },
-      { id: "se-core-1f", code: "SE", color: "#06b6d4", floorId: "1f", position: { x: "59.3%", y: "66.8%" }, batch: "lower" },
-    ],
-  },
-  {
-    id: "2f",
-    label: "2/F",
-    imagePath: "floorplans/2f.png",
-    entrance: { x: "83%", y: "56%" },
-    lifts: [
-      { id: "sn-core-2f", code: "SN", color: "#0ea5e9", floorId: "2f", position: { x: "53.0%", y: "29.4%" }, batch: "upper" },
-      { id: "h-core-2f", code: "H", color: "#94a3b8", floorId: "2f", position: { x: "52.1%", y: "38.6%" }, batch: "upper" },
-      { id: "s-core-2f", code: "S", color: "#94a3b8", floorId: "2f", position: { x: "51.5%", y: "46.4%" }, batch: "upper" },
-      { id: "l-core-2f", code: "L", color: "#eab308", floorId: "2f", position: { x: "52.3%", y: "55.1%" }, batch: "upper" },
-      { id: "a5-2f", code: "A5", color: "#f97316", floorId: "2f", position: { x: "13.3%", y: "29.8%" }, batch: "special" },
-      { id: "ht-core-2f", code: "HT", color: "#ef4444", floorId: "2f", position: { x: "52.0%", y: "58.8%" }, batch: "lower" },
-      { id: "sw-core-2f", code: "SW", color: "#06b6d4", floorId: "2f", position: { x: "47.2%", y: "67.2%" }, batch: "lower" },
-      { id: "se-core-2f", code: "SE", color: "#06b6d4", floorId: "2f", position: { x: "59.4%", y: "67.1%" }, batch: "lower" },
-    ],
-  },
+const fallbackEntrance: MapPoint = { x: "50%", y: "50%" };
+
+const floorCatalog: Array<Pick<FloorPlan, "id" | "label" | "imagePath">> = [
+  { id: "b02", label: "B02", imagePath: "floorplates/b02.png" },
+  { id: "b01", label: "B01", imagePath: "floorplates/b01.png" },
+  { id: "gf", label: "G/F", imagePath: "floorplates/gf.png" },
+  { id: "1f", label: "1/F", imagePath: "floorplates/1f.png" },
+  { id: "2f", label: "2/F", imagePath: "floorplates/2f.png" },
+  { id: "3f", label: "3/F", imagePath: "floorplates/3f.png" },
+  { id: "4f", label: "4/F", imagePath: "floorplates/4f.png" },
+  { id: "5f", label: "5/F", imagePath: "floorplates/5f.png" },
+  { id: "6f", label: "6/F", imagePath: "floorplates/6f.png" },
+  { id: "7f", label: "7/F", imagePath: "floorplates/7f.png" },
+  { id: "8f", label: "8/F", imagePath: "floorplates/8f.png" },
+  { id: "9f", label: "9/F", imagePath: "floorplates/9f.png" },
+  { id: "10f", label: "10/F", imagePath: "floorplates/10f.png" },
+  { id: "11f", label: "11/F", imagePath: "floorplates/11f.png" },
+  { id: "12f", label: "12/F", imagePath: "floorplates/12f.png" },
+  { id: "13f", label: "13/F", imagePath: "floorplates/13f.png" },
+  { id: "14f", label: "14/F", imagePath: "floorplates/14f.png" },
+  { id: "15f", label: "15/F", imagePath: "floorplates/15f.png" },
+  { id: "16f", label: "16/F", imagePath: "floorplates/16f.png" },
+  { id: "17f", label: "17/F", imagePath: "floorplates/17f.png" },
+  { id: "18f", label: "18/F", imagePath: "floorplates/18f.png" },
+  { id: "19f", label: "19/F", imagePath: "floorplates/19f.png" },
 ];
+
+const floorEntrances: Record<string, MapPoint> = {
+  gf: { x: "86%", y: "55%" },
+  "1f": { x: "86%", y: "50%" },
+  "2f": { x: "83%", y: "56%" },
+};
+
+const floorLifts: Record<string, LiftGroup[]> = {
+  gf: [
+    { id: "sn-core-gf", code: "SN", color: "#0ea5e9", floorId: "gf", position: { x: "52.3%", y: "28.6%" }, batch: "upper" },
+    { id: "h-core-gf", code: "H", color: "#facc15", floorId: "gf", position: { x: "51.6%", y: "37.9%" }, batch: "upper" },
+    { id: "s-core-gf", code: "S", color: "#fde047", floorId: "gf", position: { x: "51.1%", y: "46.7%" }, batch: "upper" },
+    { id: "l-core-gf", code: "L", color: "#eab308", floorId: "gf", position: { x: "51.3%", y: "55.5%" }, batch: "upper" },
+    { id: "a5-gf", code: "A5", color: "#f97316", floorId: "gf", position: { x: "13.3%", y: "31.1%" }, batch: "special" },
+    { id: "ht-core-gf", code: "HT", color: "#ef4444", floorId: "gf", position: { x: "52.2%", y: "58.2%" }, batch: "lower" },
+    { id: "sw-core-gf", code: "SW", color: "#06b6d4", floorId: "gf", position: { x: "47.0%", y: "67.3%" }, batch: "lower" },
+    { id: "se-core-gf", code: "SE", color: "#06b6d4", floorId: "gf", position: { x: "59.8%", y: "67.3%" }, batch: "lower" },
+  ],
+  "1f": [
+    { id: "sn-core-1f", code: "SN", color: "#0ea5e9", floorId: "1f", position: { x: "53.1%", y: "29.8%" }, batch: "upper" },
+    { id: "h-core-1f", code: "H", color: "#94a3b8", floorId: "1f", position: { x: "52.3%", y: "38.8%" }, batch: "upper" },
+    { id: "s-core-1f", code: "S", color: "#94a3b8", floorId: "1f", position: { x: "51.6%", y: "47.0%" }, batch: "upper" },
+    { id: "l-core-1f", code: "L", color: "#eab308", floorId: "1f", position: { x: "52.4%", y: "55.3%" }, batch: "upper" },
+    { id: "a5-1f", code: "A5", color: "#f97316", floorId: "1f", position: { x: "13.1%", y: "29.6%" }, batch: "special" },
+    { id: "ht-core-1f", code: "HT", color: "#ef4444", floorId: "1f", position: { x: "52.0%", y: "58.5%" }, batch: "lower" },
+    { id: "sw-core-1f", code: "SW", color: "#06b6d4", floorId: "1f", position: { x: "47.3%", y: "66.8%" }, batch: "lower" },
+    { id: "se-core-1f", code: "SE", color: "#06b6d4", floorId: "1f", position: { x: "59.3%", y: "66.8%" }, batch: "lower" },
+  ],
+  "2f": [
+    { id: "sn-core-2f", code: "SN", color: "#0ea5e9", floorId: "2f", position: { x: "53.0%", y: "29.4%" }, batch: "upper" },
+    { id: "h-core-2f", code: "H", color: "#94a3b8", floorId: "2f", position: { x: "52.1%", y: "38.6%" }, batch: "upper" },
+    { id: "s-core-2f", code: "S", color: "#94a3b8", floorId: "2f", position: { x: "51.5%", y: "46.4%" }, batch: "upper" },
+    { id: "l-core-2f", code: "L", color: "#eab308", floorId: "2f", position: { x: "52.3%", y: "55.1%" }, batch: "upper" },
+    { id: "a5-2f", code: "A5", color: "#f97316", floorId: "2f", position: { x: "13.3%", y: "29.8%" }, batch: "special" },
+    { id: "ht-core-2f", code: "HT", color: "#ef4444", floorId: "2f", position: { x: "52.0%", y: "58.8%" }, batch: "lower" },
+    { id: "sw-core-2f", code: "SW", color: "#06b6d4", floorId: "2f", position: { x: "47.2%", y: "67.2%" }, batch: "lower" },
+    { id: "se-core-2f", code: "SE", color: "#06b6d4", floorId: "2f", position: { x: "59.4%", y: "67.1%" }, batch: "lower" },
+  ],
+};
+
+export const floorPlans: FloorPlan[] = floorCatalog.map((floor, index) => ({
+  ...floor,
+  level: index,
+  entrance: floorEntrances[floor.id] ?? fallbackEntrance,
+  lifts: floorLifts[floor.id] ?? [],
+}));
 
 export const departments: Department[] = [
   {

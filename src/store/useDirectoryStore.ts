@@ -8,7 +8,7 @@ import {
 
 type DirectoryStore = {
   query: string;
-  selectedDepartmentId: string;
+  selectedDepartmentId: string | null;
   selectedFloorId: string;
   routeMode: RouteMode;
   setQuery: (value: string) => void;
@@ -46,9 +46,9 @@ export const useDirectoryStore = create<DirectoryStore>((set) => ({
       return;
     }
 
-    set((state) => ({
+    set(() => ({
       selectedFloorId: floorId,
-      selectedDepartmentId: matchingDepartment?.id ?? state.selectedDepartmentId,
+      selectedDepartmentId: matchingDepartment?.id ?? null,
     }));
   },
   setRouteMode: (mode) => set({ routeMode: mode }),

@@ -31,12 +31,11 @@ export default function Home() {
   });
 
   const selectedDepartment =
-    departments.find((department) => department.id === selectedDepartmentId) ?? departments[0];
-  const activeFloorId = selectedDepartment.floorId || selectedFloorId;
+    departments.find((department) => department.id === selectedDepartmentId) ?? null;
   const selectedFloor =
-    floorPlans.find((floor) => floor.id === activeFloorId) ??
-    floorPlans.find((floor) => floor.id === selectedFloorId) ??
-    floorPlans[0];
+    floorPlans.find((floor) => floor.id === selectedFloorId) ?? floorPlans[0];
+  const visibleDepartment =
+    selectedDepartment?.floorId === selectedFloor.id ? selectedDepartment : null;
 
   return (
     <main className="min-h-screen px-4 py-4 text-slate-900 md:px-6">
@@ -72,7 +71,7 @@ export default function Home() {
             departments={filteredDepartments}
             floors={floorPlans}
             query={query}
-            selectedDepartmentId={selectedDepartment.id}
+            selectedDepartmentId={selectedDepartment?.id ?? null}
             onQueryChange={setQuery}
             onSelect={selectDepartment}
           />
@@ -81,7 +80,7 @@ export default function Home() {
             <FloorMap
               floors={floorPlans}
               floor={selectedFloor}
-              selectedDepartment={selectedDepartment}
+              selectedDepartment={visibleDepartment}
               routeMode={routeMode}
               onSelectFloor={selectFloor}
             />
